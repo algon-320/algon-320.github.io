@@ -1,0 +1,98 @@
+:root {
+    /* Base16 Atelier Dune */
+    --base16-black:   #292824; /* base01 */
+    --base16-hl:      #6e6b5e; /* base02 */
+    --base16-beige:   #7d7a68; /* base03 */
+    --base16-white:   #a6a28c; /* base05 */
+    --base16-red:     #d73737; /* base08 */
+    --base16-orange:  #b65611; /* base09 */
+    --base16-yellow:  #ae9513; /* base0A */
+    --base16-green:   #60ac39; /* base0B */
+    --base16-cyan:    #1fad83; /* base0C */
+    --base16-blue:    #6684e1; /* base0D */
+    --base16-purple:  #b854d4; /* base0E */
+    --base16-magenta: #d43552; /* base0F */
+}
+
+/* Background */ .chroma { color: var(--base16-white); background-color: var(--base16-black) }
+/* Other */ .chroma .x { color: var(--base16-white) }
+/* Error */ .chroma .err { color: var(--base16-red) }
+/* LineTableTD */ .chroma .lntd { vertical-align: top; padding: 0; margin: 0; border: 0; }
+/* LineTable */ .chroma .lntable { border-spacing: 0; padding: 0; margin: 0; border: 0; width: auto; overflow: auto; display: block; }
+/* LineHighlight */ .chroma .hl { display: block; width: 100%; background-color: var(--base16-hl) }
+/* LineNumbersTable */ .chroma .lnt { margin-right: 0.4em; padding: 0 0.4em 0 0.4em; }
+/* LineNumbers */ .chroma .ln { margin-right: 0.4em; padding: 0 0.4em 0 0.4em; }
+/* Keyword */ .chroma .k { color: var(--base16-red) }
+/* KeywordConstant */ .chroma .kc { color: var(--base16-purple) }
+/* KeywordDeclaration */ .chroma .kd { color: var(--base16-purple) }
+/* KeywordNamespace */ .chroma .kn { color: var(--base16-purple) }
+/* KeywordPseudo */ .chroma .kp { color: var(--base16-purple) }
+/* KeywordReserved */ .chroma .kr { color: var(--base16-purple) }
+/* KeywordType */ .chroma .kt { color: var(--base16-yellow) }
+/* Name */ .chroma .n { color: var(--base16-white) }
+/* NameAttribute */ .chroma .na { color: var(--base16-blue) }
+/* NameBuiltin */ .chroma .nb { color: var(--base16-blue) }
+/* NameBuiltinPseudo */ .chroma .bp { color: var(--base16-red) }
+/* NameClass */ .chroma .nc { color: var(--base16-blue) }
+/* NameConstant */ .chroma .no { color: var(--base16-orange) }
+/* NameDecorator */ .chroma .nd { color: var(--base16-orange) }
+/* NameEntity */ .chroma .ni { color: var(--base16-blue) }
+/* NameException */ .chroma .ne { color: var(--base16-blue) }
+/* NameFunction */ .chroma .nf { color: var(--base16-blue) }
+/* NameFunctionMagic */ .chroma .fm { color: var(--base16-blue) }
+/* NameLabel */ .chroma .nl { color: var(--base16-yellow) }
+/* NameNamespace */ .chroma .nn { color: var(--base16-blue) }
+/* NameOther */ .chroma .nx { color: var(--base16-white) }
+/* NameProperty */ .chroma .py { color: var(--base16-blue) }
+/* NameTag */ .chroma .nt { color: var(--base16-purple) }
+/* NameVariable */ .chroma .nv { color: var(--base16-white) }
+/* NameVariableClass */ .chroma .vc { color: var(--base16-white) }
+/* NameVariableGlobal */ .chroma .vg { color: var(--base16-white) }
+/* NameVariableInstance */ .chroma .vi { color: var(--base16-white) }
+/* NameVariableMagic */ .chroma .vm { color: var(--base16-blue) }
+/* Literal */ .chroma .l { color: var(--base16-green) }
+/* LiteralDate */ .chroma .ld { color: var(--base16-green) }
+/* LiteralString */ .chroma .s { color: var(--base16-green) }
+/* LiteralStringAffix */ .chroma .sa { color: var(--base16-green) }
+/* LiteralStringBacktick */ .chroma .sb { color: var(--base16-green) }
+/* LiteralStringChar */ .chroma .sc { color: var(--base16-green) }
+/* LiteralStringDelimiter */ .chroma .dl { color: var(--base16-green) }
+/* LiteralStringDoc */ .chroma .sd { color: var(--base16-green) }
+/* LiteralStringDouble */ .chroma .s2 { color: var(--base16-green) }
+/* LiteralStringEscape */ .chroma .se { color: var(--base16-green) }
+/* LiteralStringHeredoc */ .chroma .sh { color: var(--base16-green) }
+/* LiteralStringInterpol */ .chroma .si { color: var(--base16-magenta) }
+/* LiteralStringOther */ .chroma .sx { color: var(--base16-green) }
+/* LiteralStringRegex */ .chroma .sr { color: var(--base16-cyan) }
+/* LiteralStringSingle */ .chroma .s1 { color: var(--base16-green) }
+/* LiteralStringSymbol */ .chroma .ss { color: var(--base16-orange) }
+/* LiteralNumber */ .chroma .m { color: var(--base16-orange) }
+/* LiteralNumberBin */ .chroma .mb { color: var(--base16-orange) }
+/* LiteralNumberFloat */ .chroma .mf { color: var(--base16-orange) }
+/* LiteralNumberHex */ .chroma .mh { color: var(--base16-orange) }
+/* LiteralNumberInteger */ .chroma .mi { color: var(--base16-orange) }
+/* LiteralNumberIntegerLong */ .chroma .il { color: var(--base16-orange) }
+/* LiteralNumberOct */ .chroma .mo { color: var(--base16-orange) }
+/* Operator */ .chroma .o { color: var(--base16-white) }
+/* OperatorWord */ .chroma .ow { color: var(--base16-white) }
+/* Punctuation */ .chroma .p { color: var(--base16-white) }
+/* Comment */ .chroma .c { color: var(--base16-beige) }
+/* CommentHashbang */ .chroma .ch { color: var(--base16-beige) }
+/* CommentMultiline */ .chroma .cm { color: var(--base16-beige) }
+/* CommentSingle */ .chroma .c1 { color: var(--base16-beige) }
+/* CommentSpecial */ .chroma .cs { color: var(--base16-beige) }
+/* CommentPreproc */ .chroma .cp { color: var(--base16-purple) }
+/* CommentPreprocFile */ .chroma .cpf { color: var(--base16-green) }
+/* Generic */ .chroma .g { color: var(--base16-white) }
+/* GenericDeleted */ .chroma .gd { color: var(--base16-red) }
+/* GenericEmph */ .chroma .ge { color: var(--base16-white); font-style: italic }
+/* GenericError */ .chroma .gr { color: var(--base16-white) }
+/* GenericHeading */ .chroma .gh { color: var(--base16-blue) }
+/* GenericInserted */ .chroma .gi { color: var(--base16-green) }
+/* GenericOutput */ .chroma .go { color: var(--base16-white) }
+/* GenericPrompt */ .chroma .gp { color: var(--base16-white) }
+/* GenericStrong */ .chroma .gs { color: var(--base16-white); font-weight: bold }
+/* GenericSubheading */ .chroma .gu { color: var(--base16-blue) }
+/* GenericTraceback */ .chroma .gt { color: var(--base16-white) }
+/* GenericUnderline */ .chroma .gl { color: var(--base16-white); text-decoration: underline }
+/* TextWhitespace */ .chroma .w {}

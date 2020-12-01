@@ -1,0 +1,17 @@
+pre {
+  background-color: #292824 !important;
+  font-size: 0.9em;
+}
+
+:not(pre) > code {
+  color: #d73737 !important;
+  font-size: 0.9em;
+}
+
+figcaption {
+  text-align: center;
+}
+
+strong {
+  font-weight: bold;
+}
