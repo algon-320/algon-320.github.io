@@ -11,11 +11,15 @@
   </url>
   
   <url>
-    <loc>https://algon-320.github.io/</loc>
+    <loc>https://algon-320.github.io/posts/</loc>
   </url>
   
   <url>
     <loc>https://algon-320.github.io/tags/</loc>
+  </url>
+  
+  <url>
+    <loc>https://algon-320.github.io/</loc>
   </url>
   
 </urlset>
