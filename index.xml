@@ -5,7 +5,17 @@
     <link>https://algon-320.github.io/</link>
     <description>Recent content in Top on My New Hugo Site</description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>ja-jp</language><atom:link href="https://algon-320.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <language>ja-jp</language>
+    <lastBuildDate>Tue, 01 Dec 2020 17:35:54 +0900</lastBuildDate><atom:link href="https://algon-320.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Markdownのテスト</title>
+      <link>https://algon-320.github.io/posts/the-first/</link>
+      <pubDate>Tue, 01 Dec 2020 17:35:54 +0900</pubDate>
+      
+      <guid>https://algon-320.github.io/posts/the-first/</guid>
+      <description>summary text</description>
+    </item>
+    
     <item>
       <title>About Me</title>
       <link>https://algon-320.github.io/about/</link>
