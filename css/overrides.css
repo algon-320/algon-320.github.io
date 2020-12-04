@@ -8,6 +8,10 @@ pre {
   font-size: 0.9em;
 }
 
+pre > code {
+  display: inline-block !important;
+}
+
 figcaption {
   text-align: center;
 }
