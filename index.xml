@@ -1,19 +1,43 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Top on My New Hugo Site</title>
+    <title>Top on Reinventing Square Wheels</title>
     <link>https://algon-320.github.io/</link>
-    <description>Recent content in Top on My New Hugo Site</description>
+    <description>Recent content in Top on Reinventing Square Wheels</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja-jp</language>
-    <lastBuildDate>Tue, 01 Dec 2020 17:35:54 +0900</lastBuildDate><atom:link href="https://algon-320.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 12 Dec 2020 00:00:00 +0900</lastBuildDate><atom:link href="https://algon-320.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Markdownのテスト</title>
-      <link>https://algon-320.github.io/posts/the-first/</link>
-      <pubDate>Tue, 01 Dec 2020 17:35:54 +0900</pubDate>
+      <title>ELVM Scratch 3.0 backend</title>
+      <link>https://algon-320.github.io/posts/elvm-scratch-backend/</link>
+      <pubDate>Sat, 12 Dec 2020 00:00:00 +0900</pubDate>
       
-      <guid>https://algon-320.github.io/posts/the-first/</guid>
-      <description>summary text</description>
+      <guid>https://algon-320.github.io/posts/elvm-scratch-backend/</guid>
+      <description>この記事は 言語実装 Advent Calendar 2020 の12日目の記事です。 昨日はfukkunさんの「Lazy Code Motion」でした。 明日はelpinalさんの「モジュールのパターンマッチ・Focused Logic」です。
+はじめに こんにちは。algonです。
+今年の4月頃にScratchで遊んでいて、そのときにELVMのScratch 3.0のバックエンドを実装しました。 この記事では
+ Scratchについて ELVMについて どのようにScratchバックエンドを実装したか  などについて紹介したいと思います。
+Scratchとは ScratchはMIT Media Lab Lifelong Kindergarten Groupによって開発されているビジュアルプログラミング言語とその開発環境です。 ブロック状のパーツをグラフィカルに組み合わせていくことで直感的にプログラミングすることができます。
+簡単な例を示すと、「1秒毎に変数をインクリメントして表示する」プログラムは以下のように実装できます。 (こちらから実行することができます。)
+   1秒毎に変数をインクリメントし、その値を表示するプログラム   このプログラムでは、緑色の旗ボタンをクリックすると実行が始まり、 1秒毎に「へんすう」がインクリメントされながら吹き出しの中にその値が表示されます。
+Scratchでは、このような簡単なプログラムはもちろん、 ブロック崩しのようなゲームからLISP処理系まで、 基本的には何でもつくることができます。
+開発環境 Scratchの開発環境は公式サイトから利用でき、Webブラウザさえあれば簡単に遊ぶことができます。 作ったプログラムを共有しないのであればログインすら不要です。
+Scratchエディタ
+言語について Scratchでは「緑色の旗ボタンがクリックされたタイミング」や「キーボードの〜キーが押されたタイミング」 などのイベントに応じて動作するスクリプトを記述することによってプログラムを行います。
+データ型 Scratchのデータには数値、文字列、真偽値の3種類があります。 数値と文字列はどちらも同じ形のブロックで表され、必要に応じてキャストが行われます1。
+ブロック Scratchでは以下に挙げるようなブロックを組み合わせることでプログラミングを行います。 ブロックの機能によって形や色が分けられています。 ブロックの形が合わないような繋ぎ方はできなくなっており、これによってシンタックスエラーを回避しています。
+イベントブロック 上部が丸くなっているブロックは「ハットブロック」と呼ばれ、 対応するイベントが発生するとこれらのブロックから実行が開始されます。   イベント関連のブロックの例   コントロールブロック 条件分岐やループを行うためのブロックです。   制御関連のブロックの例   数値演算 数値演算を行うブロックです。   数値演算関連のブロックの例   四則演算の他に、四捨五入や数学系の関数も用意されています。 ビット演算はありません。</description>
+    </item>
+    
+    <item>
+      <title>About Me</title>
+      <link>https://algon-320.github.io/about/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://algon-320.github.io/about/</guid>
+      <description>こんにちは、algonです！
+Accounts  Twitter: @algon_320 GitHub: algon-320  Interests  低レイヤ系の話題 プログラミングテクニック コンピュータ関連のトリビア的話題  ブックマーク
+ リンク集 Github Stars  Works  作ったものなど  rusty-xv6 (WIP) xv6をRustで再実装する試み (Rust, x86) cdd 予め登録しておいたディレクトリに瞬時にcdできるツール (Bash) miniocaml OCaml風言語のインタプリタ・コンパイラ (OCaml, LLVM) OCaml Kaleidoscope in LLVM9.0.0 LLVMチュートリアルでハマったポイントまとめ (OCaml, LLVM) toyterm ターミナルエミュレータ (Rust) regex-vm VM型の正規表現エンジン (Rust) tinyws 簡易的なウィンドウシステム (C) msh 簡易的なシェル (Rust) Kyopro-Ratings 競プロサイトのレーティングを取ってきてJSONにして返すサーバ (Rust) KIDE 競プロ用ツール (Go) graph-vis-tools グラフビジュアライザ (TypeScript) tenki 天気予報をターミナルから確認するツール (Python)   Contact Me E-mail: algon.</description>
     </item>
     
   </channel>

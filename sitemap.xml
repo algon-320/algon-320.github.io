@@ -3,38 +3,37 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://algon-320.github.io/categories/</loc>
-    <lastmod>2020-12-01T17:35:54+09:00</lastmod>
+    <loc>https://algon-320.github.io/tags/elvm/</loc>
+    <lastmod>2020-12-12T00:00:00+09:00</lastmod>
   </url>
   
   <url>
-    <loc>https://algon-320.github.io/categories/markdown/</loc>
-    <lastmod>2020-12-01T17:35:54+09:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://algon-320.github.io/tags/markdown/</loc>
-    <lastmod>2020-12-01T17:35:54+09:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://algon-320.github.io/posts/the-first/</loc>
-    <lastmod>2020-12-01T17:35:54+09:00</lastmod>
+    <loc>https://algon-320.github.io/posts/elvm-scratch-backend/</loc>
+    <lastmod>2020-12-12T00:00:00+09:00</lastmod>
   </url>
   
   <url>
     <loc>https://algon-320.github.io/posts/</loc>
-    <lastmod>2020-12-01T17:35:54+09:00</lastmod>
+    <lastmod>2020-12-12T00:00:00+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://algon-320.github.io/tags/scratch/</loc>
+    <lastmod>2020-12-12T00:00:00+09:00</lastmod>
   </url>
   
   <url>
     <loc>https://algon-320.github.io/tags/</loc>
-    <lastmod>2020-12-01T17:35:54+09:00</lastmod>
+    <lastmod>2020-12-12T00:00:00+09:00</lastmod>
   </url>
   
   <url>
     <loc>https://algon-320.github.io/</loc>
-    <lastmod>2020-12-01T17:35:54+09:00</lastmod>
+    <lastmod>2020-12-12T00:00:00+09:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://algon-320.github.io/about/</loc>
   </url>
   
 </urlset>

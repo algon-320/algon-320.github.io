@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+<title>ELVM Scratch 3.0 backend | Reinventing Square Wheels - algon&#39;s blog</title>
+<meta charset="utf-8">
+<meta name="generator" content="Hugo 0.79.0" />
+<meta name="description" content="Scratchコード生成">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://algon-320.github.io//css/index.css">
+<link rel="stylesheet" href="https://algon-320.github.io//css/syntax.css">
+<link rel="stylesheet" href="https://algon-320.github.io//css/overrides.css">
+<link rel="canonical" href="https://algon-320.github.io/posts/elvm-scratch-backend/">
+<link rel="alternate" type="application/rss+xml" href="" title="Reinventing Square Wheels - algon&#39;s blog">
+</head>
+
+<body>
+<header>
+
+<a href="https://algon-320.github.io/">
+Reinventing&nbsp;Square&nbsp;Wheels
+ - algon's&nbsp;blog</a>
+
+
+<nav>
+
+<a href="/posts/">Posts</a>
+
+<a href="/about/">About</a>
+
+</nav>
+
+</header>
+
+<article>
+  <header>
+    <h1>ELVM Scratch 3.0 backend</h1>
+    <time datetime="2020-12-12T00:00:00&#43;09:00">December 12, 2020</time>
+  </header>
+  <p>この記事は <a href="https://qiita.com/advent-calendar/2020/lang_dev">言語実装 Advent Calendar 2020</a> の12日目の記事です。
+昨日は<a href="https://qiita.com/fukkun">fukkun</a>さんの「<a href="https://juln.hatenablog.com/entry/2020/12/11/161055">Lazy Code Motion</a>」でした。
+明日は<a href="https://qiita.com/elpinal">elpinal</a>さんの「モジュールのパターンマッチ・Focused Logic」です。</p>
+<h2 id="はじめに">はじめに</h2>
+<p>こんにちは。algonです。</p>
+<p>今年の4月頃にScratchで遊んでいて、そのときにELVMのScratch 3.0のバックエンドを実装しました。
+この記事では</p>
+<ul>
+<li>Scratchについて</li>
+<li>ELVMについて</li>
+<li>どのようにScratchバックエンドを実装したか</li>
+</ul>
+<p>などについて紹介したいと思います。</p>
+<h2 id="scratchとは">Scratchとは</h2>
+<p><a href="https://scratch.mit.edu/">Scratch</a>はMIT Media Lab Lifelong Kindergarten Groupによって開発されているビジュアルプログラミング言語とその開発環境です。
+ブロック状のパーツをグラフィカルに組み合わせていくことで直感的にプログラミングすることができます。</p>
+<p>簡単な例を示すと、「1秒毎に変数をインクリメントして表示する」プログラムは以下のように実装できます。
+(<a href="https://scratch.mit.edu/projects/459603627/editor/">こちら</a>から実行することができます。)</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/sample_program.png" alt="images/sample_program.png">
+    <figcaption>1秒毎に変数をインクリメントし、その値を表示するプログラム</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>このプログラムでは、緑色の旗ボタンをクリックすると実行が始まり、
+1秒毎に「へんすう」がインクリメントされながら吹き出しの中にその値が表示されます。</p>
+<p>Scratchでは、このような簡単なプログラムはもちろん、
+ブロック崩しのようなゲームから<a href="https://scratch.mit.edu/projects/18997849/">LISP処理系</a>まで、
+基本的には何でもつくることができます。</p>
+<h2 id="開発環境">開発環境</h2>
+<p>Scratchの開発環境は公式サイトから利用でき、Webブラウザさえあれば簡単に遊ぶことができます。
+作ったプログラムを共有しないのであればログインすら不要です。</p>
+<p><a href="https://scratch.mit.edu/projects/editor">Scratchエディタ</a></p>
+<h2 id="言語について">言語について</h2>
+<p>Scratchでは「緑色の旗ボタンがクリックされたタイミング」や「キーボードの〜キーが押されたタイミング」
+などのイベントに応じて動作するスクリプトを記述することによってプログラムを行います。</p>
+<h3 id="データ型">データ型</h3>
+<p>Scratchのデータには数値、文字列、真偽値の3種類があります。
+数値と文字列はどちらも同じ形のブロックで表され、必要に応じてキャストが行われます<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>。</p>
+<h3 id="ブロック">ブロック</h3>
+<p>Scratchでは以下に挙げるようなブロックを組み合わせることでプログラミングを行います。
+ブロックの機能によって形や色が分けられています。
+ブロックの形が合わないような繋ぎ方はできなくなっており、これによってシンタックスエラーを回避しています。</p>
+<h4 id="イベントブロック">イベントブロック</h4>
+<p>上部が丸くなっているブロックは「ハットブロック」と呼ばれ、
+対応するイベントが発生するとこれらのブロックから実行が開始されます。
+
+  <figure>
+    <center>
+    <img src="images/block_event.png" alt="images/block_event.png">
+    <figcaption>イベント関連のブロックの例</figcaption>
+    <center>
+  </figure>
+
+</p>
+<h4 id="コントロールブロック">コントロールブロック</h4>
+<p>条件分岐やループを行うためのブロックです。
+
+  <figure>
+    <center>
+    <img src="images/block_control.png" alt="images/block_control.png">
+    <figcaption>制御関連のブロックの例</figcaption>
+    <center>
+  </figure>
+
+</p>
+<h4 id="数値演算">数値演算</h4>
+<p>数値演算を行うブロックです。
+
+  <figure>
+    <center>
+    <img src="images/block_number_operation.png" alt="images/block_number_operation.png">
+    <figcaption>数値演算関連のブロックの例</figcaption>
+    <center>
+  </figure>
+
+
+四則演算の他に、四捨五入や数学系の関数も用意されています。
+ビット演算はありません。</p>
+<h4 id="文字列演算">文字列演算</h4>
+<p>文字列に関する演算を行うブロックです。
+
+  <figure>
+    <center>
+    <img src="images/block_string_operation.png" alt="images/block_string_operation.png">
+    <figcaption>文字列演算関連のブロックの例</figcaption>
+    <center>
+  </figure>
+
+
+言語を日本語（にほんご）にしていると若干分かりにくいですが、
+「〜と〜」というブロックは文字列の結合を意味します。
+また、「〜の〜ばんめのもじ」ブロックのインデックスは1オリジンです。</p>
+<h4 id="真偽値演算">真偽値演算</h4>
+<p>真偽値に関する演算を行うブロックです。
+
+  <figure>
+    <center>
+    <img src="images/block_boolean_operation.png" alt="images/block_boolean_operation.png">
+    <figcaption>真偽値演算関連のブロックの例</figcaption>
+    <center>
+  </figure>
+
+
+大小比較の演算に文字列を入力した場合はアルファベット順で比較が行われます。</p>
+<h4 id="変数">変数</h4>
+<p>Scratchでは変数を扱うことができます。
+変数には数値か文字列のどちらかを格納することができます。
+
+  <figure>
+    <center>
+    <img src="images/block_variable.png" alt="images/block_variable.png">
+    <figcaption>変数の代入を行うブロックと値を参照するブロック</figcaption>
+    <center>
+  </figure>
+
+</p>
+<h4 id="リスト">リスト</h4>
+<p>リストを扱うこともできます。
+
+  <figure>
+    <center>
+    <img src="images/block_list_operation.png" alt="images/block_list_operation.png">
+    <figcaption>リスト関連のブロックの例</figcaption>
+    <center>
+  </figure>
+
+
+リストの中身はステージ(実行結果の画面)に表示させることができます。
+
+  <figure>
+    <center>
+    <img src="images/list.png" alt="images/list.png">
+    <figcaption>リストの例</figcaption>
+    <center>
+  </figure>
+
+</p>
+<h4 id="その他">その他</h4>
+<p>その他にも様々な機能を持つブロックが用意されています。
+
+  <figure>
+    <center>
+    <img src="images/block_others.png" alt="images/block_others.png">
+    <figcaption>他のブロックの例</figcaption>
+    <center>
+  </figure>
+
+</p>
+<h4 id="カスタムブロック">カスタムブロック</h4>
+<p>一連の手続きをまとめた新しいブロックを定義して利用することができます。
+他のプログラミング言語における関数のように使うことができ、再帰的に呼び出すこともできます。
+
+  <figure>
+    <center>
+    <img src="images/block_define.png" alt="images/block_define.png">
+    <figcaption>カスタムブロック</figcaption>
+    <center>
+  </figure>
+
+</p>
+<hr>
+<p>ここに挙げたブロック以外にも、見た目を変えたり音を鳴らしたりするブロックも用意されています。
+ブロックの完全な一覧と説明は<a href="https://en.scratch-wiki.info/wiki/Blocks">wiki</a>を参照してください。</p>
+<h2 id="scratchのコード生成">Scratchのコード生成</h2>
+<p>さて、Scratchについての説明はこれくらいにしておいて、本題に移りたいと思います。</p>
+<p>一通り遊んでみたあと、何か面白いことはできないかと考えていました。<br>
+そんなときに思い出したのが<strong>Scratcher&rsquo;s AtCoder</strong>です。</p>
+<h3 id="scratch--c-scratchers-atcoder">Scratch → C++ (Scratcher&rsquo;s AtCoder)</h3>
+<p><a href="https://chrome.google.com/webstore/detail/scratchers-atcoder/hackndbjgkehhjinjjoldifbhnfddklh?hl=ja"><strong>Scratcher&rsquo;s AtCoder</strong></a>
+は、yos1upさん作の、
+ScratchでAtCoder(競技プログラミングのコンテスト)に参加するためのChrome拡張機能です。</p>
+<p>Scratcher&rsquo;s AtCoderでは、
+ScratchのプログラムからC++のコードを出力することによってAtCoderに参加できるようにしています。</p>
+<p>「〜ときいてまつ」ブロックと「〜という」ブロックを標準入出力として解釈してC++のソースコードへ変換を行っているようです。</p>
+<h3 id="c言語--scratch-">C言語 → Scratch (???)</h3>
+<p>ScratchからC++を生成することができるのであれば、
+逆に別の言語からScratchプログラムを生成することもできるはずです。
+少し調べたところ誰もやっていなさそうなので挑戦してみることにしました。</p>
+<p>そこで、<a href="https://github.com/shinh/elvm">ELVM</a>を用いて
+C言語からScratchのコードを生成することを考えました。</p>
+<p><a href="https://github.com/shinh/elvm">shinh/elvm</a></p>
+<p>ELVMはLLVMのような仕組みを用いて、C言語から様々な難解言語に対してコンパイルを行うことができるコンパイラ基盤です。
+ELVMでは、フロントエンド(改造された8cc)によってC言語からELVM IRへの変換が行われ、
+各言語のバックエンドによってIRからそれぞれの言語への変換が行われます。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/elvm.svg" alt="ELVMのイメージ">
+    <figcaption>ELVMの概要図</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>今回はScratchのコードを生成するので、
+ELVM IRを入力としてScratchのコードを出力するバックエンドを作成することになります。</p>
+<h2 id="scratchのソースコードを扱う">Scratchのソースコード(?)を扱う</h2>
+<p>Scratchエディタで作成したScratchプログラムはメニューの「ファイル → コンピュータにほぞんする」
+からローカルに保存し、「ファイル → コンピュータからよみこむ」から保存したプロジェクトを
+読み込むことができるようになっています。</p>
+<p>ここで保存・読み込みしているファイルがプログラムの本体なので、このファイルを機械的に生成すればよいことになります。</p>
+<p>このファイルのフォーマットについては<a href="https://en.scratch-wiki.info/wiki/Scratch_File_Format">Scratch File Format - Scratch Wiki</a>に詳しい説明がありました。</p>
+<blockquote>
+<p>The Scratch 3.0 file format is the format used to store exported Scratch 3.0 projects and sprites. These are ZIP archives which contain information encoded in a text-based format called JSON and project media in separate files. Projects have the extension .sb3, and sprites .sprite3.</p>
+</blockquote>
+<p>JSON形式のプロジェクトファイルとその他のアセット(画像や音声)がzipアーカイブされたファイルになっているようです。</p>
+<p>wikiのページにはJSONファイルについてのフォーマットが書かれています。
+大まかには次のような雰囲気になっています。</p>
+<details>
+<summary>クリックで開く</summary>
+<div class="highlight"><pre class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
+    <span class="nt">&#34;targets&#34;</span><span class="p">:[</span>
+        <span class="p">{</span>
+            <span class="nt">&#34;isStage&#34;</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span>
+            <span class="nt">&#34;name&#34;</span><span class="p">:</span><span class="s2">&#34;Stage&#34;</span><span class="p">,</span>
+            <span class="nt">&#34;variables&#34;</span><span class="p">:{</span>
+                <span class="nt">&#34;#r:a&#34;</span><span class="p">:[</span><span class="s2">&#34;a&#34;</span><span class="p">,</span> <span class="s2">&#34;0&#34;</span><span class="p">],</span>
+                <span class="nt">&#34;#r:b&#34;</span><span class="p">:[</span><span class="s2">&#34;b&#34;</span><span class="p">,</span> <span class="s2">&#34;0&#34;</span><span class="p">],</span>
+                <span class="err">...(略)...</span>
+            <span class="p">},</span>
+            <span class="nt">&#34;broadcasts&#34;</span><span class="p">:{},</span>
+            <span class="nt">&#34;blocks&#34;</span><span class="p">:{</span>
+                <span class="err">...(略)...</span>
+                <span class="nt">&#34;b250&#34;</span><span class="p">:{</span>
+                   <span class="nt">&#34;opcode&#34;</span><span class="p">:</span><span class="s2">&#34;data_setvariableto&#34;</span><span class="p">,</span>
+                   <span class="nt">&#34;next&#34;</span><span class="p">:</span><span class="s2">&#34;b251&#34;</span><span class="p">,</span>
+                   <span class="nt">&#34;parent&#34;</span><span class="p">:</span><span class="s2">&#34;b247&#34;</span><span class="p">,</span>
+                   <span class="nt">&#34;shadow&#34;</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span> <span class="nt">&#34;topLevel&#34;</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span>
+                   <span class="nt">&#34;inputs&#34;</span><span class="p">:{</span> <span class="nt">&#34;VALUE&#34;</span><span class="p">:[</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&#34;b249&#34;</span><span class="p">]},</span>
+                   <span class="nt">&#34;fields&#34;</span><span class="p">:{</span> <span class="nt">&#34;VARIABLE&#34;</span><span class="p">:[</span><span class="s2">&#34;b&#34;</span><span class="p">,</span> <span class="s2">&#34;#r:b&#34;</span><span class="p">]}</span>
+                <span class="p">},</span>
+                <span class="nt">&#34;b249&#34;</span><span class="p">:{</span>
+                   <span class="nt">&#34;opcode&#34;</span><span class="p">:</span><span class="s2">&#34;operator_mod&#34;</span><span class="p">,</span>
+                   <span class="nt">&#34;next&#34;</span><span class="p">:</span><span class="kc">null</span><span class="p">,</span>
+                   <span class="nt">&#34;parent&#34;</span><span class="p">:</span><span class="s2">&#34;b250&#34;</span><span class="p">,</span>
+                   <span class="nt">&#34;shadow&#34;</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span> <span class="nt">&#34;topLevel&#34;</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span>
+                   <span class="nt">&#34;inputs&#34;</span><span class="p">:{</span>
+                       <span class="nt">&#34;NUM1&#34;</span><span class="p">:[</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&#34;b248&#34;</span><span class="p">],</span>
+                       <span class="nt">&#34;NUM2&#34;</span><span class="p">:[</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&#34;16777216&#34;</span><span class="p">]]</span>
+                   <span class="p">},</span>
+                   <span class="nt">&#34;fields&#34;</span><span class="p">:{}</span>
+                <span class="p">},</span>
+                <span class="err">...(略)...</span>
+            <span class="p">},</span>
+            <span class="nt">&#34;comments&#34;</span><span class="p">:{},</span>
+            <span class="nt">&#34;currentCostume&#34;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+            <span class="nt">&#34;costumes&#34;</span><span class="p">:[{</span>
+                <span class="nt">&#34;name&#34;</span><span class="p">:</span><span class="s2">&#34;backdrop&#34;</span><span class="p">,</span>
+                <span class="nt">&#34;assetId&#34;</span><span class="p">:</span><span class="s2">&#34;fcb8546c50e11d422b78fd55e34d7e7e&#34;</span><span class="p">,</span>
+                <span class="nt">&#34;md5ext&#34;</span><span class="p">:</span><span class="s2">&#34;fcb8546c50e11d422b78fd55e34d7e7e.svg&#34;</span><span class="p">,</span>
+                <span class="nt">&#34;dataFormat&#34;</span><span class="p">:</span><span class="s2">&#34;svg&#34;</span>
+            <span class="p">}],</span>
+            <span class="nt">&#34;sounds&#34;</span><span class="p">:[],</span>
+            <span class="nt">&#34;volume&#34;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span>
+            <span class="nt">&#34;layerOrder&#34;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+            <span class="nt">&#34;tempo&#34;</span><span class="p">:</span><span class="mi">60</span><span class="p">,</span>
+            <span class="nt">&#34;videoTransparency&#34;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span>
+            <span class="nt">&#34;videoState&#34;</span><span class="p">:</span><span class="s2">&#34;on&#34;</span><span class="p">,</span>
+            <span class="nt">&#34;textToSpeechLanguage&#34;</span><span class="p">:</span><span class="kc">null</span>
+        <span class="p">}</span>
+    <span class="p">],</span>
+    <span class="nt">&#34;monitors&#34;</span><span class="p">:[],</span>
+    <span class="nt">&#34;extensions&#34;</span><span class="p">:[],</span>
+    <span class="nt">&#34;meta&#34;</span><span class="p">:{</span><span class="nt">&#34;semver&#34;</span><span class="p">:</span><span class="s2">&#34;3.0.0&#34;</span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div><p>重要なのは<code>&quot;variables&quot;</code>と<code>&quot;blocks&quot;</code>です。</p>
+<p><code>&quot;variables&quot;</code>にはプログラム内で使用している変数についての情報が入っています。</p>
+<p><code>&quot;blocks&quot;</code>にはブロックの種類やブロック同士がどのように繋がっているかなどといった情報が入っています。</p>
+</details>
+<h2 id="elvm">ELVM</h2>
+<p><a href="https://github.com/shinh/elvm/blob/master/ELVM.md">ELVM</a>はとてもシンプルに設計されたVMです。
+簡単にまとめると、以下のような仕様になっています。</p>
+<ul>
+<li>ワード: 符号なし整数 (多くのバックエンドで24bit)</li>
+<li>レジスタ: A, B, C, D, SP, BP の6種類 (それぞれ1ワード)</li>
+<li>メモリのアドレス空間: 1ワード</li>
+<li>命令列はメモリとは別に存在
+<ul>
+<li>各ベーシックブロックに対してアドレス(PC)が振られる</li>
+<li>あるPCへジャンプすると対応するベーシックブロックの先頭の命令から順に実行される</li>
+</ul>
+</li>
+<li>命令: 以下の22種類
+<ul>
+<li>MOV dst, src
+<ul>
+<li>代入</li>
+</ul>
+</li>
+<li>ADD dst, src
+<ul>
+<li>加算</li>
+</ul>
+</li>
+<li>SUB dst, src
+<ul>
+<li>減算</li>
+</ul>
+</li>
+<li>LOAD dst, src
+<ul>
+<li>メモリ読み込み</li>
+</ul>
+</li>
+<li>STORE src, dst
+<ul>
+<li>メモリ書き込み</li>
+</ul>
+</li>
+<li>PUTC src
+<ul>
+<li>レジスタの値をASCIIコードとして標準出力に1文字書く</li>
+</ul>
+</li>
+<li>GETC dst
+<ul>
+<li>標準入力から1文字読み、ASCIIコードをレジスタに格納</li>
+</ul>
+</li>
+<li>EXIT
+<ul>
+<li>プログラムの終了</li>
+</ul>
+</li>
+<li>JEQ/JNE/JLT/JGT/JLE/JGE jmp, dst, src
+<ul>
+<li>条件付きジャンプ</li>
+</ul>
+</li>
+<li>JMP jmp
+<ul>
+<li>ジャンプ</li>
+</ul>
+</li>
+<li>EQ/NE/LT/GT/LE/GE dst, src
+<ul>
+<li>比較結果(0か1)をdstに格納</li>
+</ul>
+</li>
+<li>DUMP
+<ul>
+<li>何もしない</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="バックエンドの実装">バックエンドの実装</h2>
+<p>ここからはELVMの構成要素をScratch上でどのように扱うかについて見ていきます。</p>
+<h3 id="レジスタ">レジスタ</h3>
+<p>ELVMの6つのレジスタはScratchの変数を用いて管理します。
+符号なし24bit整数の範囲(0〜16777215)はそのままScratch上での数値として扱うことができます<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup>。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/register_initialization.png" alt="images/register_initialization.png">
+    <figcaption>レジスタの初期化</figcaption>
+    <center>
+  </figure>
+
+</p>
+<h3 id="標準入出力">標準入出力</h3>
+<p>標準入力は「〜ときいてまつ」ブロックを用いて受け取り、
+標準出力はリストの1要素を1行にみたてて出力します。</p>
+<p>以下のスクリーンショットは <a href="https://github.com/shinh/elvm/blob/master/test/echo.eir">test/echo.eir</a> から生成した例です。
+NULL文字が入力されるまで標準入力の文字を標準出力にエコーし続けるプログラムです。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/test_echo_eir_1.png" alt="images/test_echo_eir_1.png">
+    <figcaption>標準入力に「hello＼nworld」と入力</figcaption>
+    <center>
+  </figure>
+
+
+
+  <figure>
+    <center>
+    <img src="images/test_echo_eir_2.png" alt="images/test_echo_eir_2.png">
+    <figcaption>「hello」と「world」が2行に出力された</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>特殊文字を入力するためにエスケープ文字として全角バックスラッシュ(<code>＼</code>)を使うことにしました<sup id="fnref:3"><a href="#fn:3" class="footnote-ref" role="doc-noteref">3</a></sup>。</p>
+<p>改行文字は <code>＼n</code> 、null文字は <code>＼0</code> 、それ以外の特殊文字は <code>＼dXXX</code> (<code>XXX</code>は10進3桁)で入力します。</p>
+<p>入力を処理する部分は次のように実装しました。
+<code>_w</code> はGETC命令が呼ばれたことを示すフラグ変数です。
+標準出力の<code>stdout</code>の他に、標準入力のバッファとして<code>stdin</code>というリストを用いています。
+入力された文字列を文字毎に区切って<code>stdin</code>に追加しています。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/process_stdin.png" alt="images/process_stdin.png">
+    <figcaption>標準入力処理部分の実装</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>GETC命令の実装は次のようになっています。
+標準入力から1文字取ってきて<code>ascii_encode</code>を呼び出しています。
+結果は<code>getchar</code>と<code>ascii_encode</code>どちらも変数<code>_r</code>に格納するということにしています。(ここでは<code>ascii_encode</code>の結果がそのまま<code>getchar</code>の結果になります。)</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/getc_impl.png" alt="images/getc_impl.png">
+    <figcaption>GETC命令の実装</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>PUTC命令の実装は次のようになっています。
+今度は<code>_r</code>が入力となり、入力の数値をASCIIコードとして解釈し、対応する文字を<code>stdout</code>に追記しています。
+改行文字のとき(<code>_r == 10</code>)は新しい行を追加します。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/putc_impl.png" alt="images/putc_impl.png">
+    <figcaption>PUTC命令の実装</figcaption>
+    <center>
+  </figure>
+
+</p>
+<h3 id="asciiエンコーダデコーダ">ASCIIエンコーダ・デコーダ</h3>
+<p><code>ascii_encode</code>と<code>ascii_decode</code>の実装は以下のようになっています。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/ascii_encoder.png" alt="images/ascii_encoder.png">
+    <figcaption>ASCIIエンコーダ (文字→ASCIIコード)</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/ascii_decoder.png" alt="images/ascii_decoder.png">
+    <figcaption>ASCIIデコーダ (ASCIIコード→文字)</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>特殊文字(<code>＼dXXX</code>)の場合は3文字目から3文字をそのままコードとして返します。</p>
+<p>それ以外の文字の場合は後述する<strong>背景を用いたテクニック</strong>によってASCIIコードに変換します。</p>
+<p>当初はASCIIテーブルをリストとして埋め込んでおいて、
+リストのi番目を取得する操作と線形探索によってASCIIエンコーダ・デコーダを実装しようとしていたのですが、
+<strong>Scratchの等価演算子(=ブロック)は大文字小文字を区別しない</strong>
+という仕様のせいでうまく動きませんでした。</p>
+<p>大文字小文字を区別して等価判定を行うハックとして「コスチューム」を用いる方法がScratch Wikiで紹介されていたので最終的にこれを採用しました<sup id="fnref:4"><a href="#fn:4" class="footnote-ref" role="doc-noteref">4</a></sup>。</p>
+<p><a href="https://en.scratch-wiki.info/wiki/Case_Sensing">Case Sensing</a></p>
+<h3 id="背景">背景</h3>
+<p>背景は複数用意することができ、それぞれに<strong>名前</strong>をつけることができます。
+
+  <figure>
+    <center>
+    <img src="images/backdrop_list.png" alt="images/backdrop_list.png">
+    <figcaption>背景編集画面</figcaption>
+    <center>
+  </figure>
+
+
+この例では、1番の背景には<code>Blue Sky</code>という名前、2番の背景には<code>Desert</code>という名前がつけらています。</p>
+<p>ステージの背景を切り替えるための「はいけいを〜にする」というブロックがあります。
+入力には<strong>背景の番号</strong>もしくは<strong>背景の名前</strong>を用いることができ、
+指定した背景に切り替えることができます。
+
+  <figure>
+    <center>
+    <img src="images/backdrop_change_with_idx.png" alt="images/backdrop_change_with_idx.png">
+    <figcaption>番号を用いて背景を変更</figcaption>
+    <center>
+  </figure>
+
+
+
+  <figure>
+    <center>
+    <img src="images/backdrop_change_with_name.png" alt="images/backdrop_change_with_name.png">
+    <figcaption>名前を用いて背景を変更</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>ここで、<strong>背景の名前</strong>を入力したときの挙動がポイントで、実はこのときの背景の名前は<strong>大文字と小文字が区別される</strong>という仕様になっています。
+そして現在の背景の名前と番号はそれぞれ「はいけいのなまえ」「はいけいのばんごう」ブロックから得ることができます。
+これらを使って背景の名前としてASCIIテーブルを埋め込むのが次のテクニックです。</p>
+<h3 id="asciiテーブルを背景に埋め込む">ASCIIテーブルを背景に埋め込む</h3>
+<p>背景を128個用意し、それぞれに</p>
+<ul>
+<li>1番目の背景は「<code>＼0</code>」</li>
+<li>2番目の背景は「<code>＼1</code>」</li>
+<li>&hellip;</li>
+<li>34番目の背景は「<code>!</code>」</li>
+<li>35番目の背景は「<code>&quot;</code>」</li>
+<li>&hellip;</li>
+<li>66番目の背景は「<code>A</code>」</li>
+<li>&hellip;</li>
+<li>98番目の背景は「<code>a</code>」</li>
+</ul>
+<p>のように名前をつけておくと、背景をASCIIテーブルとして用いることができるようになります。</p>
+<p>例えば「はいけいを<code>33+1</code>にする」を実行したあとで「はいけいのなまえ」を参照することで<code>!</code>を得ることができ、ASCIIコードの33から<code>!</code>という文字を引くことができます。
+エンコードはこの逆を行います。</p>
+<p>「はいけいを〜にする」ブロックでは大文字小文字が区別されるため、「はいけいを<code>&quot;A&quot;</code>にする」と「はいけいを<code>&quot;a&quot;</code>にする」はそれぞれ66番目の背景と98番目の背景に切り替わり、正しくASCIIエンコードを行うことができます。</p>
+<h3 id="メモリの管理">メモリの管理</h3>
+<p>24bitのアドレスで表現されるメモリをどう扱うかが一番の悩みどころでした。</p>
+<p>まず愚直な方針として、巨大なリストを用意し、メモリの各ワードをリストの1要素として表現しようと考えました。
+しかし残念ながら、Scratchのリストは最大で20万要素に制限されているため、そのままでは24bitのアドレス空間を扱うことができません。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/list_limit.png" alt="images/list_limit.png">
+    <figcaption>Scratch 3.0のリストは最大20万要素</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>また、2^24個の値を10進表記の文字列として連結して1つの巨大な文字列として扱うのはどうだろうと思い試してみたところ、プロジェクトが重くなりすぎてエラーで落ちてしまいました。<br>
+実はScratchのプロジェクトファイルには最大で5MBというサイズ制限があり、メモリの情報を直に持たせるとそれだけで5MBを超えてしまうのが原因でした。</p>
+<p>そこで値を文字列としてそのまま連結するのではなく圧縮した状態で持つことにしました。
+圧縮といっても複雑なロジックを書くのは大変なのでBase64を用いて文字列化します。
+初めは16進表記で文字列化しようとしていましたが、圧縮率の観点からBase64でエンコードすることにしました<sup id="fnref:5"><a href="#fn:5" class="footnote-ref" role="doc-noteref">5</a></sup>。</p>
+<p>それでもメモリ全体の値を持つのはファイルサイズの制限からまずそうなので、適当なグループ毎(4069要素毎)にリストの1要素に格納することにして、未使用の部分は空にしておいて必要になったタイミングで生成するようにしました。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/memory_management.png" alt="images/memory_management.png">
+    <figcaption>初めの4096要素だけ値が入っていて未使用部分は空</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>この例では、</p>
+<ul>
+<li>0番地に<code>8388608</code></li>
+<li>1番地に<code>4194304</code></li>
+<li>&hellip;</li>
+<li>4096番地に<code>0</code></li>
+<li>4097番地に<code>0</code></li>
+<li>&hellip;</li>
+</ul>
+<p>という感じで値が格納されています。</p>
+<p>あとはASCIIコードと同じようにBase64エンコーダ・デコーダを実装すれば完了、といきたいところですが、ここに来てまたまた問題に直面します。</p>
+<p>実は、Scratchには「<strong>文字列のi文字目を変更する</strong>」ブロックが存在しないのでした！
+「<strong>文字列のi文字目を取得する</strong>」ブロックがあるので変更するブロックもあるだろうと思い込んでいました……</p>
+<hr>
+<p>しばらく考えた後、
+特定のグループ(4069要素)だけ別のリストに要素毎にデコードしておいて、
+必要になったタイミングでエンコードして書き戻す方針を思いつきました。</p>
+<p>ちょうどOSのページイン・ページアウトのようなイメージです。
+(以降、Base64デコードして要素ごとにばらす操作を<em>ページイン</em>、その逆を<em>ページアウト</em>と呼ぶことにします。)</p>
+<p>ページアウトの処理には「i文字目を変更する」という操作は必要なく、
+「文字列の末尾に文字を追加する」操作によって実現できます。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/expanded_page.png" alt="images/expanded_page.png">
+    <figcaption>先程のmemoryの1グループ目を展開した様子</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>展開中のページ以外の範囲を書き換える必要が出てきたら、そのタイミングでページアウト・ページインを行います。</p>
+<p>「こういうときはダーティビットを用意すると不要なページアウト処理をなくせる」
+というOSの授業で習った知識を思い出しましたが、今回は不要でした。<br>
+メモリのロードだけなら「<strong>文字列のi文字目を取得する</strong>」ブロックを使うことでページインなしで読み込めるからです。
+つまり、ページインが必要なのはメモリを書き換えるときのみなので、そもそもダーティビットは不要なのでした。</p>
+<p>そんなこんなでようやくメモリ管理の方針が決まりました。</p>
+<h3 id="base64エンコーダデコーダ">Base64エンコーダ・デコーダ</h3>
+<p><code>base64_encode</code>、<code>base64_decode</code> の実装は以下のようになっています。ASCIIエンコーダ・デコーダと基本的に同じです。</p>
+<p>背景の番号をASCIIの空間分(128要素分)ずらしている点と、
+衝突を避けるために先頭に <code>!</code> を前置している点が異なります。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/base64_encoder.png" alt="images/base64_encoder.png">
+    <figcaption>Base64エンコーダ (0~63の数値→Base64文字)</figcaption>
+    <center>
+  </figure>
+
+
+
+  <figure>
+    <center>
+    <img src="images/base64_decoder.png" alt="images/base64_decoder.png">
+    <figcaption>Base64デコーダ (Base64文字→0~63の数値)</figcaption>
+    <center>
+  </figure>
+
+</p>
+<h3 id="mov命令">MOV命令</h3>
+<p>変数の値を初期化するブロックがそのまま使えます。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/inst_mov.png" alt="images/inst_mov.png">
+    <figcaption>例: MOV A, 10</figcaption>
+    <center>
+  </figure>
+
+</p>
+<h3 id="add命令sub命令">ADD命令、SUB命令</h3>
+<p>符号なし整数のラップアラウンドのために0x1000000でmodを取っています。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/inst_add.png" alt="images/inst_add.png">
+    <figcaption>例: ADD A, 1</figcaption>
+    <center>
+  </figure>
+
+</p>
+<h3 id="load命令store命令">LOAD命令、STORE命令</h3>
+<p><code>_r</code> 変数を経由して値を読み書きしています。
+
+  <figure>
+    <center>
+    <img src="images/inst_load.png" alt="images/inst_load.png">
+    <figcaption>例: LOAD A, B (BのアドレスからAに読み込み)</figcaption>
+    <center>
+  </figure>
+
+
+
+  <figure>
+    <center>
+    <img src="images/inst_store.png" alt="images/inst_store.png">
+    <figcaption>例: STORE A, D (Aの値をDのアドレスに書き込み)</figcaption>
+    <center>
+  </figure>
+
+
+(そろそろ飽きてきたと思うので<code>load</code>と<code>store</code>の実装は省略します。)</p>
+<h3 id="exit命令">EXIT命令</h3>
+<p>処理を中断するブロックがそのまま使えます。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/inst_exit.png" alt="images/inst_exit.png">
+    <figcaption>EXIT</figcaption>
+    <center>
+  </figure>
+
+</p>
+<h3 id="jmp系命令">JMP系命令</h3>
+<p>pcレジスタを変更します。-1しているのは外側のループでpcのインクリメントを行っている分を打ち消すためです。
+(あるベーシックブロック内の命令をすべて実行し終えたら次のベーシックブロックに遷移する必要があるため、ループの末尾でPCのインクリメントを入れています。)</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/inst_jmp.png" alt="images/inst_jmp.png">
+    <figcaption>例: JMP A</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/inst_jgt.png" alt="images/inst_jgt.png">
+    <figcaption>例: JGT 3, A, 255</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>JGE, JLE, JNE命令では、比較を行う際にブロック数を減らすために逆の判定を行いif-elseブロックのelse側を利用するような工夫を行っています。</p>
+<p>Scratchには「X ≤ Y」のようなブロックが存在しないため、愚直にやろうとすると「X&lt;(Y+1)」のようになってしまい、加算の1ブロックが余計に必要になってしまいます。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/inst_jge.png" alt="images/inst_jge.png">
+    <figcaption>例: JGE 3, A, B (A ≥ BならPC=3へジャンプ)</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/inst_jge_naive.png" alt="images/inst_jge_naive.png">
+    <figcaption>愚直な JGE 3, A, B の実装</figcaption>
+    <center>
+  </figure>
+
+</p>
+<h3 id="比較系命令">比較系命令</h3>
+<p>if-elseブロックを用いて愚直に実装しています。GE命令やNE命令では、JGE命令やJNE命令と同様のブロック数を減らす工夫を行っています。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/inst_eq.png" alt="images/inst_eq.png">
+    <figcaption>例: EQ A, 1000</figcaption>
+    <center>
+  </figure>
+
+</p>
+<h3 id="制御フロー">制御フロー</h3>
+<p>PCレジスタの値に応じて対応するベーシックブロックを実行するようにします。</p>
+<p>switch文が欲しくなりますが、Scratchにはswitch文に相当するブロックは存在しないので、if-elseを用いて実装します。</p>
+<p>素直に実装すると次のようになると思います。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/switch.png" alt="images/switch.png">
+    <figcaption>if-elseのネストでswitch文相当の分岐を行う</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>これでいいのですが、目的のベーシックブロックにたどり着くまでにPCの大きさに比例した回数の比較が発生することになり、後ろの方を実行するのが遅くなってしまいます。</p>
+<p>そこで、以下のように二分探索的にif-elseをネストするようにしました。</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/switch_binsearch.png" alt="images/switch_binsearch.png">
+    <figcaption>二分探索的にネスト</figcaption>
+    <center>
+  </figure>
+
+</p>
+<p>最終的には、ここからさらに512個毎のチャンクに分けることでネストが深くなりすぎないようにしました。
+(ただ、この工夫にどれくらい効果があるかは不明です。)</p>
+<p>
+  <figure>
+    <center>
+    <img src="images/chunked_pc_branch_1.png" alt="images/chunked_pc_branch_1.png">
+    <figcaption>チャンクの分岐例</figcaption>
+    <center>
+  </figure>
+
+
+
+  <figure>
+    <center>
+    <img src="images/chunked_pc_branch_2.png" alt="images/chunked_pc_branch_2.png">
+    <figcaption>各チャンクでのベーシックブロックの分岐例</figcaption>
+    <center>
+  </figure>
+
+</p>
+<h3 id="c言語でjsonを生成">C言語でJSONを生成</h3>
+<p>ELVMのバックエンドとして完成させるために、ここまでに紹介したScratchのプログラムをJSONとして出力するものをC言語で実装します。
+wikiのJSONの仕様が不完全だったため、コードを読みに行ったりScratchエディタで組み立てたものをリバースエンジニアリングしながら頑張りました。</p>
+<p>実装したものが <a href="https://github.com/shinh/elvm/blob/master/target/scratch3.c">target/scratch3.c</a> になります。</p>
+<p>方針としては、まずはブロックの木を構築し、これをトラバースしながらJSONを出力しています。</p>
+<p>バックエンドのエントリポイントは <code>void target_scratch3(Module *module)</code> です。<code>module-&gt;data</code> に静的に配置するデータの情報が、<code>module-&gt;text</code> に命令列が格納されています。</p>
+<p>以下の部分で各コンポーネントを構築しています。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c" data-lang="c"><span class="ln">1635</span>  <span class="n">scr3_impl_read_stdin</span><span class="p">();</span>
+<span class="ln">1636</span>  <span class="n">scr3_impl_ascii_encode</span><span class="p">();</span>
+<span class="ln">1637</span>  <span class="n">scr3_impl_ascii_decode</span><span class="p">();</span>
+<span class="ln">1638</span>  <span class="n">scr3_impl_base64_decode</span><span class="p">();</span>
+<span class="ln">1639</span>  <span class="n">scr3_impl_base64_encode</span><span class="p">();</span>
+<span class="ln">1640</span>  <span class="n">scr3_impl_writeback_page</span><span class="p">();</span>
+<span class="ln">1641</span>  <span class="n">scr3_impl_expand_page</span><span class="p">();</span>
+<span class="ln">1642</span>  <span class="n">scr3_impl_store</span><span class="p">();</span>
+<span class="ln">1643</span>  <span class="n">scr3_impl_load</span><span class="p">();</span>
+<span class="ln">1644</span>  <span class="n">scr3_impl_initialize</span><span class="p">();</span>
+<span class="ln">1645</span>  <span class="n">scr3_impl_getchar</span><span class="p">();</span>
+<span class="ln">1646</span>  <span class="n">scr3_impl_putchar</span><span class="p">();</span>
+<span class="ln">1647</span>  <span class="n">scr3_impl_init_memory</span><span class="p">(</span><span class="n">module</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
+<span class="ln">1648</span>  <span class="n">scr3_impl_main_loop</span><span class="p">(</span><span class="n">module</span><span class="o">-&gt;</span><span class="n">text</span><span class="p">);</span>
+</code></pre></div><p>その後、JSONを出力します。
+Scratchプログラムの変数(レジスタやリスト)、ブロック(プログラム本体)、背景(ASCIIテーブルとBase64テーブル)などを出力していきます。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c" data-lang="c"><span class="ln">1652</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;{</span><span class="se">\&#34;</span><span class="s">targets</span><span class="se">\&#34;</span><span class="s">:[{</span><span class="se">\&#34;</span><span class="s">isStage</span><span class="se">\&#34;</span><span class="s">:true,</span><span class="se">\&#34;</span><span class="s">name</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">Stage</span><span class="se">\&#34;</span><span class="s">,&#34;</span><span class="p">);</span>
+<span class="ln">1653</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">variables</span><span class="se">\&#34;</span><span class="s">:{&#34;</span><span class="p">);</span>
+<span class="ln">1654</span>  <span class="k">for</span> <span class="p">(</span><span class="n">scr3_reg_t</span> <span class="n">reg</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">reg</span> <span class="o">&lt;</span> <span class="n">scr3_reg_count</span><span class="p">;</span> <span class="n">reg</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+<span class="ln">1655</span>    <span class="k">if</span> <span class="p">(</span><span class="n">reg</span><span class="p">)</span> <span class="n">putchar</span><span class="p">(</span><span class="sc">&#39;,&#39;</span><span class="p">);</span>
+<span class="ln">1656</span>    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span> <span class="o">=</span> <span class="n">scr3_register_name</span><span class="p">[</span><span class="n">reg</span><span class="p">];</span>
+<span class="ln">1657</span>    <span class="n">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">#r:%s</span><span class="se">\&#34;</span><span class="s">:[</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">, </span><span class="se">\&#34;</span><span class="s">0</span><span class="se">\&#34;</span><span class="s">]&#34;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+<span class="ln">1658</span>  <span class="p">}</span>
+<span class="ln">1659</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;},</span><span class="se">\&#34;</span><span class="s">lists</span><span class="se">\&#34;</span><span class="s">:{&#34;</span><span class="p">);</span>
+<span class="ln">1660</span>  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">list</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">list</span> <span class="o">&lt;</span> <span class="n">SCR3_NUM_OF_LIST</span><span class="p">;</span> <span class="n">list</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+<span class="ln">1661</span>    <span class="k">if</span> <span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="n">putchar</span><span class="p">(</span><span class="sc">&#39;,&#39;</span><span class="p">);</span>
+<span class="ln">1662</span>    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span> <span class="o">=</span> <span class="n">SCR3_LIST_NAME</span><span class="p">[</span><span class="n">list</span><span class="p">];</span>
+<span class="ln">1663</span>    <span class="n">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">#l:%s</span><span class="se">\&#34;</span><span class="s">:[</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">, []]&#34;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+<span class="ln">1664</span>  <span class="p">}</span>
+<span class="ln">1665</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;},</span><span class="se">\&#34;</span><span class="s">broadcasts</span><span class="se">\&#34;</span><span class="s">:{},</span><span class="se">\&#34;</span><span class="s">blocks</span><span class="se">\&#34;</span><span class="s">:{&#34;</span><span class="p">);</span>
+<span class="ln">1666</span>
+<span class="ln">1667</span>  <span class="n">scr3_emit_all</span><span class="p">();</span>
+<span class="ln">1668</span>
+<span class="ln">1669</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;},</span><span class="se">\&#34;</span><span class="s">comments</span><span class="se">\&#34;</span><span class="s">:{},</span><span class="se">\&#34;</span><span class="s">currentCostume</span><span class="se">\&#34;</span><span class="s">:192,</span><span class="se">\&#34;</span><span class="s">costumes</span><span class="se">\&#34;</span><span class="s">:[&#34;</span><span class="p">);</span>
+<span class="ln">1670</span>
+<span class="ln">1671</span>  <span class="c1">// embed ASCII table in backdrops
+</span><span class="ln">1672</span><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">128</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+<span class="ln">1673</span>    <span class="kt">char</span> <span class="n">escaped_char_str</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+<span class="ln">1674</span>    <span class="k">if</span> <span class="p">(</span><span class="mi">32</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="o">&amp;&amp;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">127</span><span class="p">)</span> <span class="p">{</span>
+<span class="ln">1675</span>      <span class="n">sprintf</span><span class="p">(</span><span class="n">escaped_char_str</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="sc">&#39;&#34;&#39;</span> <span class="o">||</span> <span class="n">i</span> <span class="o">==</span> <span class="sc">&#39;\\&#39;</span><span class="p">)</span> <span class="o">?</span> <span class="s">&#34;</span><span class="se">\\</span><span class="s">%c&#34;</span> <span class="o">:</span> <span class="s">&#34;%c&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+<span class="ln">1676</span>    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="mi">10</span><span class="p">)</span> <span class="p">{</span>
+<span class="ln">1677</span>      <span class="n">sprintf</span><span class="p">(</span><span class="n">escaped_char_str</span><span class="p">,</span> <span class="s">&#34;＼n&#34;</span><span class="p">);</span>
+<span class="ln">1678</span>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+<span class="ln">1679</span>      <span class="n">sprintf</span><span class="p">(</span><span class="n">escaped_char_str</span><span class="p">,</span> <span class="s">&#34;＼%d&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+<span class="ln">1680</span>    <span class="p">}</span>
+<span class="ln">1681</span>    <span class="n">printf</span><span class="p">(</span>
+<span class="ln">1682</span>        <span class="s">&#34;{</span><span class="se">\&#34;</span><span class="s">name</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">assetId</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">md5ext</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s.svg</span><span class="se">\&#34;</span><span class="s">,&#34;</span>
+<span class="ln">1683</span>        <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">dataFormat</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">svg</span><span class="se">\&#34;</span><span class="s">},&#34;</span><span class="p">,</span>
+<span class="ln">1684</span>        <span class="n">escaped_char_str</span><span class="p">,</span> <span class="n">SCR3_SVG_MD5</span><span class="p">,</span> <span class="n">SCR3_SVG_MD5</span><span class="p">);</span>
+<span class="ln">1685</span>  <span class="p">}</span>
+<span class="ln">1686</span>  <span class="c1">// embed Base64 table in backdrops (with prefix &#39;!&#39;)
+</span><span class="ln">1687</span><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">64</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+<span class="ln">1688</span>    <span class="n">printf</span><span class="p">(</span>
+<span class="ln">1689</span>        <span class="s">&#34;{</span><span class="se">\&#34;</span><span class="s">name</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">!%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">assetId</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">md5ext</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s.svg</span><span class="se">\&#34;</span><span class="s">,&#34;</span>
+<span class="ln">1690</span>        <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">dataFormat</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">svg</span><span class="se">\&#34;</span><span class="s">},&#34;</span><span class="p">,</span>
+<span class="ln">1691</span>        <span class="n">SCR3_BASE64_TABLE</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">SCR3_SVG_MD5</span><span class="p">,</span> <span class="n">SCR3_SVG_MD5</span><span class="p">);</span>
+<span class="ln">1692</span>  <span class="p">}</span>
+<span class="ln">1693</span>
+<span class="ln">1694</span>  <span class="c1">// main backdrop
+</span><span class="ln">1695</span><span class="c1"></span>  <span class="n">printf</span><span class="p">(</span>
+<span class="ln">1696</span>      <span class="s">&#34;{</span><span class="se">\&#34;</span><span class="s">name</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">backdrop</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">assetId</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">md5ext</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s.svg</span><span class="se">\&#34;</span><span class="s">,&#34;</span>
+<span class="ln">1697</span>      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">dataFormat</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">svg</span><span class="se">\&#34;</span><span class="s">}&#34;</span><span class="p">,</span>
+<span class="ln">1698</span>      <span class="n">SCR3_SVG_MD5</span><span class="p">,</span> <span class="n">SCR3_SVG_MD5</span><span class="p">);</span>
+<span class="ln">1699</span>
+<span class="ln">1700</span>  <span class="n">printf</span><span class="p">(</span>
+<span class="ln">1701</span>      <span class="s">&#34;],</span><span class="se">\&#34;</span><span class="s">sounds</span><span class="se">\&#34;</span><span class="s">:[],</span><span class="se">\&#34;</span><span class="s">volume</span><span class="se">\&#34;</span><span class="s">:100,</span><span class="se">\&#34;</span><span class="s">layerOrder</span><span class="se">\&#34;</span><span class="s">:0,</span><span class="se">\&#34;</span><span class="s">tempo</span><span class="se">\&#34;</span><span class="s">:60,&#34;</span>
+<span class="ln">1702</span>      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">videoTransparency</span><span class="se">\&#34;</span><span class="s">:50,</span><span class="se">\&#34;</span><span class="s">videoState</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">on</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">textToSpeechLanguage</span><span class="se">\&#34;</span><span class="s">:&#34;</span>
+<span class="ln">1703</span>      <span class="s">&#34;null}],</span><span class="se">\&#34;</span><span class="s">monitors</span><span class="se">\&#34;</span><span class="s">:[{</span><span class="se">\&#34;</span><span class="s">id</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">#l:stdout</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">mode</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">list</span><span class="se">\&#34;</span><span class="s">,&#34;</span>
+<span class="ln">1704</span>      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">opcode</span><span class="se">\&#34;</span><span class="s">:&#34;</span><span class="p">);</span>
+<span class="ln">1705</span>  <span class="n">printf</span><span class="p">(</span>
+<span class="ln">1706</span>      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">data_listcontents</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">params</span><span class="se">\&#34;</span><span class="s">:{</span><span class="se">\&#34;</span><span class="s">LIST</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">stdout</span><span class="se">\&#34;</span><span class="s">},</span><span class="se">\&#34;</span><span class="s">spriteName</span><span class="se">\&#34;</span><span class="s">:&#34;</span>
+<span class="ln">1707</span>      <span class="s">&#34;null,</span><span class="se">\&#34;</span><span class="s">value</span><span class="se">\&#34;</span><span class="s">:[],</span><span class="se">\&#34;</span><span class="s">width</span><span class="se">\&#34;</span><span class="s">:480,</span><span class="se">\&#34;</span><span class="s">height</span><span class="se">\&#34;</span><span class="s">:280,</span><span class="se">\&#34;</span><span class="s">x</span><span class="se">\&#34;</span><span class="s">:0,</span><span class="se">\&#34;</span><span class="s">y</span><span class="se">\&#34;</span><span class="s">:0,&#34;</span>
+<span class="ln">1708</span>      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">visible</span><span class="se">\&#34;</span><span class="s">:true}],</span><span class="se">\&#34;</span><span class="s">extensions</span><span class="se">\&#34;</span><span class="s">:[],</span><span class="se">\&#34;</span><span class="s">meta</span><span class="se">\&#34;</span><span class="s">:{</span><span class="se">\&#34;</span><span class="s">semver</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">3.0.0</span><span class="se">\&#34;</span><span class="s">}}&#34;</span><span class="p">);</span>
+<span class="ln">1709</span>  <span class="k">return</span><span class="p">;</span>
+</code></pre></div><p>C言語にはraw stringリテラルがないため、頑張ってダブルクオートをエスケープしています。</p>
+<hr>
+<p>ちなみに、<code>#define RAW(...) (#__VA_ARGS__)</code> というマクロによってraw stringリテラルを模倣することもできますが、連続する空白文字が半角スペース1個に置換されてしまいます。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c" data-lang="c"><span class="ln"> 1</span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span><span class="ln"> 2</span><span class="cp">#define RAW(...) (#__VA_ARGS__)
+</span><span class="ln"> 3</span><span class="cp"></span><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+<span class="ln"> 4</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;%s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span><span class="n">RAW</span><span class="p">(</span>
+<span class="ln"> 5</span>    <span class="p">{</span>
+<span class="ln"> 6</span>      <span class="s">&#34;foo&#34;</span><span class="o">:</span> <span class="p">[</span>
+<span class="ln"> 7</span>        <span class="s">&#34;bar&#34;</span><span class="p">,</span>
+<span class="ln"> 8</span>        <span class="s">&#34;baz&#34;</span>
+<span class="ln"> 9</span>      <span class="p">]</span>
+<span class="ln">10</span>    <span class="p">}</span>
+<span class="ln">11</span>  <span class="p">));</span>
+<span class="ln">12</span>  <span class="c1">// =&gt; { &#34;foo&#34;: [ &#34;bar&#34;, &#34;baz&#34; ] }
+</span><span class="ln">13</span><span class="c1"></span><span class="p">}</span>
+</code></pre></div><p>初めはこれを使って実装を進めていたのですが、
+エディタのシンタックスハイライトやフォーマッタがうまく動かなかったり、
+あまりきれいな方法とは言えないので結局使いませんでした。</p>
+<h2 id="実行">実行</h2>
+<h3 id="elvmのコマンド">ELVMのコマンド</h3>
+<p>elvmのリポジトリのルートディレクトリで<code>make</code>を実行すると、<code>out/</code>以下に<code>8cc</code>、<code>elc</code>、<code>eli</code>などが生成されます。</p>
+<p><code>out/8cc</code>はELVM IRを出力する機能が加わった8ccです。
+C言語のソースファイル(<code>*.c</code>)をコンパイルしてEIRファイル(<code>*.eir</code>)を出力することができます。</p>
+<div class="highlight"><pre class="chroma"><code class="language-text" data-lang="text">$ ./out/8cc -S -Ilibc ./test/fizzbuzz.c -o ./fizzbuzz.eir
+$ ls ./fizzbuzz.eir
+./fizzbuzz.eir
+</code></pre></div><p><code>out/elc</code>はEIRファイルを入力に取って、各バックエンドの出力を得ることができます。
+コマンドラインオプションでバックエンドの名前を指定します。
+バックエンドの名前は<code>target/elc.c</code>の<code>get_target_func</code>から確認できます。</p>
+<div class="highlight"><pre class="chroma"><code class="language-text" data-lang="text">$ ./out/elc -rb ./test/basic.eir &gt; basic.rb
+$ ruby basic.rb
+!!@X
+</code></pre></div><p><code>out/eli</code>はEIRをそのまま解釈して実行するインタプリタです。</p>
+<div class="highlight"><pre class="chroma"><code class="language-text" data-lang="text">$ ./out/eli ./test/basic.eir
+!!@X
+</code></pre></div><h3 id="scratchプロジェクトの生成">Scratchプロジェクトの生成</h3>
+<p>Scratchバックエンドが出力したJSONからsb3ファイルを生成するための補助スクリプト(<a href="https://github.com/shinh/elvm/blob/master/tools/gen_scratch_sb3.sh">tools/gen_scratch_sb3.sh</a>)を作成しました。
+以下のように使うことができます。</p>
+<div class="highlight"><pre class="chroma"><code class="language-text" data-lang="text">$ ./out/elc -scratch3 ./test/echo.eir &gt; ./echo.eir.scratch3
+$ ./tools/gen_scratch_sb3.sh ./echo.eir.scratch3
+$ ls echo.eir.scratch3.sb3
+echo.eir.scratch3.sb3
+</code></pre></div><p>elcが出力したJSONファイル(<code>./echo.eir.scratch3</code>)を引数として渡して実行すると、同じディレクトリに<code>*.sb3</code>ファイルが生成されます。生成された<code>*.sb3</code>ファイルはScratchエディタから読み込んで実行できます。</p>
+<h3 id="コマンドラインからの実行">コマンドラインからの実行</h3>
+<p>生成されたScratchプログラムをコマンドラインから実行するための補助スクリプト(<a href="https://github.com/shinh/elvm/blob/master/tools/runscratch3.sh">tools/runscratch3.sh</a>, <a href="https://github.com/shinh/elvm/blob/master/tools/run_scratch.js">tools/run_scratch.js</a>)を作成しました。</p>
+<p>コマンドラインから実行するにはtoolsディレクトリ以下にnpmパッケージ<a href="https://github.com/LLK/scratch-vm">scratch-vm</a>をインストールしておく必要があります。</p>
+<p><code>run_scratch.js</code> 側でエスケープ処理を行っているため、
+コマンドラインから実行する場合は特殊文字もそのまま入力できます。</p>
+<div class="highlight"><pre class="chroma"><code class="language-text" data-lang="text">$ cd tools
+$ npm install scratch-vm
+$ echo -e &#34;hello\nworld&#34; | node ./run_scratch.js ../echo.eir.scratch3.sb3
+hello
+world
+</code></pre></div><p>ちなみに実行はかなり遅く、私の環境では結果が出力されるまでに20秒くらいかかりました<sup id="fnref:6"><a href="#fn:6" class="footnote-ref" role="doc-noteref">6</a></sup>。</p>
+<h3 id="c言語からの変換">C言語からの変換</h3>
+<p>以下のようにしてC言語で書かれたプログラム(<code>your_program.c</code>)をScratchプロジェクト(<code>your_program.scratch3.sb3</code>)へ変換できます。</p>
+<div class="highlight"><pre class="chroma"><code class="language-text" data-lang="text">$ ./out/8cc -Ilibc -S your_program.c -o your_program.eir
+$ ./out/elc -scratch3 your_program.eir &gt; your_program.scratch3
+$ ./tools/gen_scratch_sb3.sh your_program.scratch3
+$ ls your_program.scratch3.sb3
+your_program.scratch3.sb3
+</code></pre></div><h2 id="8cc-in-scratch">8cc in Scratch</h2>
+<div class="highlight"><pre class="chroma"><code class="language-text" data-lang="text">$ ./out/elc -scratch3 ./out/8cc.c.eir &gt; ./out/8cc.c.eir.scratch3  # 8ccをScratchに変換
+$ cat ./test/8cc.in
+int putchar(int x);
+
+int main() {
+  putchar(&#39;X&#39;);
+  return 0;
+}
+$ time nodejs --stack-size=65500 ./tools/run_scratch.js \
+&gt; ./out/8cc.c.eir.scratch3 &lt; ./test/8cc.in &gt; ./8cc.in.eir # Scratch版8ccでコンパイルしてEIRを出力
+
+real    92m52.362s
+user    90m44.119s
+sys     0m10.411s
+$ ./out/eli ./8cc.in.eir  # eliで実行
+X$ 
+</code></pre></div><p>1.5時間くらいかかりましたが、Scratch上で8ccが動きました!!</p>
+<p>生成された <code>./out/8cc.c.eir.scratch3</code> のサイズは46MBくらいありました。
+Scratchの仕様上は5MBの制限があるはずですが、scratch-vmではそれを超えるものでも一応実行できるようです。
+ちなみに、Scratchエディタからは読み込むことができませんでした。</p>
+<h2 id="elc-in-scratch">elc in Scratch</h2>
+<p>8ccが動いたならelcも!
+と思いながら走らせてみましたが、48時間経っても終わらなかったので諦めました…… 残念!</p>
+<h2 id="おわりに">おわりに</h2>
+<p>この記事では今年の4月頃に取り組んだELVM Scratchバックエンドの実装について紹介しました。
+やはりいろいろな制約がある環境でのプログラミングは楽しいですね。</p>
+<p>みなさんも是非ScratchやELVMで遊んでみてください。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c" data-lang="c"><span class="ln">1</span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span><span class="ln">2</span><span class="cp"></span><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+<span class="ln">3</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;Thank you for reading!</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+<span class="ln">4</span>  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="ln">5</span><span class="p">}</span>
+</code></pre></div><p>
+  <img src="images/thank_you.png" alt="images/thank_you.png">
+
+</p>
+<hr>
+<details><summary>試行錯誤ツイートまとめ</summary>
+<center>
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">ELVMのScratchバックエンドを実装しようと思っていろいろと調べていたんだけど、project JSONのファイルサイズに5MBの制約があるのが厳しそうだなぁ</p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1247553146227806212?ref_src=twsrc%5Etfw">April 7, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script> 
+<blockquote class="twitter-tweet" data-conversation="none"><p lang="ja" dir="ltr">メモリはBase64でエンコードした文字列をvariableに入れておくのがいい気がする(1ワード24bitだから1ワード4文字で表現できる)のだけど、<br>これを2**24個持とうとするとそれだけで64MB使うことになってしまう</p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1247556752486223872?ref_src=twsrc%5Etfw">April 7, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet" data-conversation="none"><p lang="ja" dir="ltr">projectのJSONの外側でプログラムを表現する手段として、プログラムやデータを画像にエンコードしておいて「touching color () ?」ブロックを使ってデコードして動作させるというのを考えた(もはやScratchではなくpiet)</p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1247558408498081793?ref_src=twsrc%5Etfw">April 7, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script> 
+<blockquote class="twitter-tweet" data-conversation="none"><p lang="ja" dir="ltr">メモリは収まる範囲内で使えるということにして、とりあえずコード生成部分を書いてみるか<br>あと、テストのために標準入出力に繋ぎたいけどこれはどうしようかなぁ</p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1247785984562876417?ref_src=twsrc%5Etfw">April 8, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script> 
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">&quot;手書き&quot;のScratchコードが動いた(ちょっと感動)</p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1247834651739058178?ref_src=twsrc%5Etfw">April 8, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script> 
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">Scratchコード生成の進捗<br>レジスタの代入と足し算はとりあえず実装できた <a href="https://t.co/wykV4sKg8Y">pic.twitter.com/wykV4sKg8Y</a></p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1248634113105350656?ref_src=twsrc%5Etfw">April 10, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet" data-conversation="none"><p lang="ja" dir="ltr">文字列のn番目を変更する操作できないのか……<br>メモリを文字列で管理するつもりだったからちょっと考えなきゃだな</p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1248938946169409536?ref_src=twsrc%5Etfw">April 11, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">ASCIIコード、Base64をエンコード・デコードをする手続きが生成できるようになった<br>(wikiに載ってたハックでbackdropにテーブルを埋め込んでいる) <a href="https://t.co/mzpY3uuE9S">pic.twitter.com/mzpY3uuE9S</a></p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1249753494388494336?ref_src=twsrc%5Etfw">April 13, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">作ってるものはしょうもないけど、作業量は結構あるから達成感がある</p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1249771882099818496?ref_src=twsrc%5Etfw">April 13, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">ついにELVMのScratchバックエンド完成した(っぽい)けど、激重でFizzBuzzすら動かない😭</p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1250375799816912898?ref_src=twsrc%5Etfw">April 15, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet" data-conversation="none"><p lang="ja" dir="ltr">こういう小さいやつは動いてるぞ <a href="https://t.co/vz1gNWjtgZ">pic.twitter.com/vz1gNWjtgZ</a></p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1250380396845346821?ref_src=twsrc%5Etfw">April 15, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet" data-conversation="none"><p lang="ja" dir="ltr">1分くらい放置したらout/fizzbuzz_fast.c.eirが動いた！(感動) <a href="https://t.co/JYXqZNigIx">pic.twitter.com/JYXqZNigIx</a></p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1250399816812605442?ref_src=twsrc%5Etfw">April 15, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">fizzbuzzが激重なだけじゃなくて、どこかがバグってるっぽい<br>putsを呼んでるだけのコードでもプログラム自体は終了はするけど正しく出力されない <a href="https://t.co/a0p6782W6B">https://t.co/a0p6782W6B</a></p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1250667558795010048?ref_src=twsrc%5Etfw">April 16, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">LISPインタプリタ(out/lisp.c.eir)も動いた！(めっちゃ遅いけど)<br>62953ブロックあるらしくて、このレベルなら間違いなくELVMの恩恵を受けていると言えるでしょ！ <a href="https://t.co/xuXE3bKQV7">pic.twitter.com/xuXE3bKQV7</a></p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1250775151534239744?ref_src=twsrc%5Etfw">April 16, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">いろいろ改善した結果、FizzBuzzの実行は結構速くなった<br>(終了時なぜか重くなるけど)<br><br>生成元のCコードはこれ→<a href="https://t.co/Sx6CchqLCk">https://t.co/Sx6CchqLCk</a> <a href="https://t.co/ZT06Hq5bm6">pic.twitter.com/ZT06Hq5bm6</a></p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1252514631941124096?ref_src=twsrc%5Etfw">April 21, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet"><p lang="sv" dir="ltr">ELVM Scratch backend! <a href="https://t.co/1UBscIEHdl">https://t.co/1UBscIEHdl</a> <a href="https://t.co/ZBTLmkIfWw">https://t.co/ZBTLmkIfWw</a> <a href="https://t.co/MUGDOpZ30S">https://t.co/MUGDOpZ30S</a> <a href="https://t.co/vAFwVbak99">pic.twitter.com/vAFwVbak99</a></p>&mdash; shinichiro hamaji (@shinh) <a href="https://twitter.com/shinh/status/1256058442483027968?ref_src=twsrc%5Etfw">May 1, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script> 
+<blockquote class="twitter-tweet"><p lang="ja" dir="ltr">ELVM Scratchバックエンドマージされました！🙌<br>結局1ヶ月近くかかっちゃったけど、これにて一段落</p>&mdash; あるごん (@algon_320) <a href="https://twitter.com/algon_320/status/1256071966580019201?ref_src=twsrc%5Etfw">May 1, 2020</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+</center>
+</details>
+<hr>
+<span>
+<a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-text="{{ .Title | safeHTML }}" data-related="algon_320" data-show-count="false">Tweet</a>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<a data-pocket-label="pocket" data-pocket-count="horizontal" class="pocket-btn" data-lang="en"></a>
+<script type="text/javascript">!function(d,i){if(!d.getElementById(i)){var j=d.createElement("script");j.id=i;j.src="https://widgets.getpocket.com/v1/j/btn.js?v=1";var w=d.getElementById(i);d.body.appendChild(j);}}(document,"pocket-btn-js");</script>
+</span>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1" role="doc-endnote">
+<p>キャストのルールについては<a href="https://en.scratch-wiki.info/wiki/Casting">wikiのページ</a>にまとまっています。 <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2" role="doc-endnote">
+<p>Scratchにおける数値の仕様は見つけられませんでしたが、おそらくJavaScriptのNumber型として実装されています。 <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:3" role="doc-endnote">
+<p>本当は半角バックスラッシュを使いたかったのですが、
+(おそらく)Scratchのバグによってプロジェクトが保存できなくなってしまうため、
+全角バックスラッシュを使いました。 <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:4" role="doc-endnote">
+<p>コスチュームとはキャラクターの見た目を変える機能のことで、
+ステージの背景を用いても同じことができます。 <a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:5" role="doc-endnote">
+<p>24bitの値を16進で表記すると6文字必要ですが、Base64なら4文字で表現できます。 <a href="#fnref:5" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:6" role="doc-endnote">
+<p>Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz、メモリ32GiB、Ubuntu 18.04、node v8.10.0。 <a href="#fnref:6" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+
+</article>
+
+
+
+</body>
+</html>

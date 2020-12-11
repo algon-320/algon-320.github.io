@@ -5,7 +5,11 @@ pre {
 
 :not(pre) > code {
   color: #d73737 !important;
-  font-size: 0.9em;
+}
+@media (prefers-color-scheme: dark) {
+    :not(pre) > code {
+      color: #ff6e6e !important;
+    }
 }
 
 pre > code {
@@ -18,4 +22,14 @@ figcaption {
 
 strong {
   font-weight: bold;
+}
+
+body > footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  background: #1c1d22;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(60, 62, 73, 0.6);
 }
