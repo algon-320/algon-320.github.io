@@ -6,7 +6,29 @@
     <description>Recent content in Top on Reinventing Square Wheels</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja-jp</language>
-    <lastBuildDate>Sat, 12 Dec 2020 00:00:00 +0900</lastBuildDate><atom:link href="https://algon-320.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 18 Feb 2022 16:07:00 +0900</lastBuildDate><atom:link href="https://algon-320.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>vimdiffの謎</title>
+      <link>https://algon-320.github.io/posts/vimdiff-behavior/</link>
+      <pubDate>Fri, 18 Feb 2022 16:07:00 +0900</pubDate>
+      
+      <guid>https://algon-320.github.io/posts/vimdiff-behavior/</guid>
+      <description>ファイルの差分を確認するためのコマンドとしてdiffコマンドがありますが、 vimのインタフェースを用いて差分を確認できるvimdiffというコマンドもあります。
+$ vimdiff a.txt b.txt のように使います。 vimdiffはdiffよりも見やすくて便利なのでよく使っています。
+ある日、ふとvimdiffの実体が気になって確認してみると、 /usr/bin/vimへのシンボリックリンクになっていることに気がつきました。
+$ type vimdiff vimdiff is /usr/bin/vimdiff $ ls -l /usr/bin/vimdiff lrwxrwxrwx 1 root root 3 Jan 16 21:09 /usr/bin/vimdiff -&amp;gt; vim* vimには-dというオプションがあり、このオプションを渡すとvimdiffと同じように差分表示モードで起動します。 vimdiffはvim -dをラップしているスクリプトファイルか何かかと予想していたのですが、 実体はvimへのシンボリックリンクでした。
+そうなるとvimdiffとvimは何が違うんだと疑問に思うのですが、
+$ vim a.txt b.txt と
+$ vimdiff a.txt b.txt は明らかに挙動が異なります。 シンボリックリンクに「特定のオプションを追加して起動する」なんていう機能は存在しないよなあと 思いつつ調べてみると、stackoverflowに同じ全く同じ質問が見つかりました。
+https://stackoverflow.com/questions/8876323/how-does-the-softlink-vimdiff-be-implemented
+結局これはどういう仕組みなのかというと、 vimがargv[0]を見て挙動を変えているということでした。
+C言語でユーザプログラムを書く際に、main関数の引数としてargvをとることができます。 普通、シェルはargv[0]に実行ファイルの名前を設定し、argv[1]以降にコマンドライン引数を格納します。 実行ファイルへのシンボリックリンクの場合、argv[0]にはシンボリックリンクの名前が渡されることになります。
+vimdiffを起動するとargv[0]にはvimdiffが渡され、 普通にvimを起動したときにはvimが渡されることになります。 vimは「main関数に渡されたargv[0]がvimdiffだったら、-dオプションが指定されたときと同じように振る舞う」というようなことをやっているわけですね。
+以下のようなC言語のプログラムを書いてこの挙動を確認してみました。
+my-vim.c:
+1#include &amp;lt;libgen.h&amp;gt;2#include &amp;lt;stdio.h&amp;gt;3#include &amp;lt;string.h&amp;gt;4 5int main(int argc, char *argv[]) { 6 if (argc &amp;lt; 1) return 1; 7 printf(&amp;#34;my-vim.</description>
+    </item>
+    
     <item>
       <title>ELVM Scratch 3.0 backend</title>
       <link>https://algon-320.github.io/posts/elvm-scratch-backend/</link>

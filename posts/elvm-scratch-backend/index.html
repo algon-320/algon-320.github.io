@@ -3,7 +3,7 @@
 <head>
 <title>ELVM Scratch 3.0 backend | Reinventing Square Wheels - algon&#39;s blog</title>
 <meta charset="utf-8">
-<meta name="generator" content="Hugo 0.79.0" />
+<meta name="generator" content="Hugo 0.92.2" />
 <meta name="description" content="Scratchコード生成">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://algon-320.github.io//css/index.css">
@@ -249,7 +249,7 @@ ELVM IRを入力としてScratchのコードを出力するバックエンドを
 大まかには次のような雰囲気になっています。</p>
 <details>
 <summary>クリックで開く</summary>
-<div class="highlight"><pre class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
     <span class="nt">&#34;targets&#34;</span><span class="p">:[</span>
         <span class="p">{</span>
             <span class="nt">&#34;isStage&#34;</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span>
@@ -786,7 +786,7 @@ wikiのJSONの仕様が不完全だったため、コードを読みに行った
 <p>方針としては、まずはブロックの木を構築し、これをトラバースしながらJSONを出力しています。</p>
 <p>バックエンドのエントリポイントは <code>void target_scratch3(Module *module)</code> です。<code>module-&gt;data</code> に静的に配置するデータの情報が、<code>module-&gt;text</code> に命令列が格納されています。</p>
 <p>以下の部分で各コンポーネントを構築しています。</p>
-<div class="highlight"><pre class="chroma"><code class="language-c" data-lang="c"><span class="ln">1635</span>  <span class="n">scr3_impl_read_stdin</span><span class="p">();</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="ln">1635</span>  <span class="n">scr3_impl_read_stdin</span><span class="p">();</span>
 <span class="ln">1636</span>  <span class="n">scr3_impl_ascii_encode</span><span class="p">();</span>
 <span class="ln">1637</span>  <span class="n">scr3_impl_ascii_decode</span><span class="p">();</span>
 <span class="ln">1638</span>  <span class="n">scr3_impl_base64_decode</span><span class="p">();</span>
@@ -802,7 +802,7 @@ wikiのJSONの仕様が不完全だったため、コードを読みに行った
 <span class="ln">1648</span>  <span class="n">scr3_impl_main_loop</span><span class="p">(</span><span class="n">module</span><span class="o">-&gt;</span><span class="n">text</span><span class="p">);</span>
 </code></pre></div><p>その後、JSONを出力します。
 Scratchプログラムの変数(レジスタやリスト)、ブロック(プログラム本体)、背景(ASCIIテーブルとBase64テーブル)などを出力していきます。</p>
-<div class="highlight"><pre class="chroma"><code class="language-c" data-lang="c"><span class="ln">1652</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;{</span><span class="se">\&#34;</span><span class="s">targets</span><span class="se">\&#34;</span><span class="s">:[{</span><span class="se">\&#34;</span><span class="s">isStage</span><span class="se">\&#34;</span><span class="s">:true,</span><span class="se">\&#34;</span><span class="s">name</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">Stage</span><span class="se">\&#34;</span><span class="s">,&#34;</span><span class="p">);</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="ln">1652</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;{</span><span class="se">\&#34;</span><span class="s">targets</span><span class="se">\&#34;</span><span class="s">:[{</span><span class="se">\&#34;</span><span class="s">isStage</span><span class="se">\&#34;</span><span class="s">:true,</span><span class="se">\&#34;</span><span class="s">name</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">Stage</span><span class="se">\&#34;</span><span class="s">,&#34;</span><span class="p">);</span>
 <span class="ln">1653</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">variables</span><span class="se">\&#34;</span><span class="s">:{&#34;</span><span class="p">);</span>
 <span class="ln">1654</span>  <span class="k">for</span> <span class="p">(</span><span class="n">scr3_reg_t</span> <span class="n">reg</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">reg</span> <span class="o">&lt;</span> <span class="n">scr3_reg_count</span><span class="p">;</span> <span class="n">reg</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
 <span class="ln">1655</span>    <span class="k">if</span> <span class="p">(</span><span class="n">reg</span><span class="p">)</span> <span class="n">putchar</span><span class="p">(</span><span class="sc">&#39;,&#39;</span><span class="p">);</span>
@@ -863,7 +863,7 @@ Scratchプログラムの変数(レジスタやリスト)、ブロック(プロ�
 </code></pre></div><p>C言語にはraw stringリテラルがないため、頑張ってダブルクオートをエスケープしています。</p>
 <hr>
 <p>ちなみに、<code>#define RAW(...) (#__VA_ARGS__)</code> というマクロによってraw stringリテラルを模倣することもできますが、連続する空白文字が半角スペース1個に置換されてしまいます。</p>
-<div class="highlight"><pre class="chroma"><code class="language-c" data-lang="c"><span class="ln"> 1</span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="ln"> 1</span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
 </span><span class="ln"> 2</span><span class="cp">#define RAW(...) (#__VA_ARGS__)
 </span><span class="ln"> 3</span><span class="cp"></span><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
 <span class="ln"> 4</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;%s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span><span class="n">RAW</span><span class="p">(</span>
@@ -884,22 +884,22 @@ Scratchプログラムの変数(レジスタやリスト)、ブロック(プロ�
 <p>elvmのリポジトリのルートディレクトリで<code>make</code>を実行すると、<code>out/</code>以下に<code>8cc</code>、<code>elc</code>、<code>eli</code>などが生成されます。</p>
 <p><code>out/8cc</code>はELVM IRを出力する機能が加わった8ccです。
 C言語のソースファイル(<code>*.c</code>)をコンパイルしてEIRファイル(<code>*.eir</code>)を出力することができます。</p>
-<div class="highlight"><pre class="chroma"><code class="language-text" data-lang="text">$ ./out/8cc -S -Ilibc ./test/fizzbuzz.c -o ./fizzbuzz.eir
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text">$ ./out/8cc -S -Ilibc ./test/fizzbuzz.c -o ./fizzbuzz.eir
 $ ls ./fizzbuzz.eir
 ./fizzbuzz.eir
 </code></pre></div><p><code>out/elc</code>はEIRファイルを入力に取って、各バックエンドの出力を得ることができます。
 コマンドラインオプションでバックエンドの名前を指定します。
 バックエンドの名前は<code>target/elc.c</code>の<code>get_target_func</code>から確認できます。</p>
-<div class="highlight"><pre class="chroma"><code class="language-text" data-lang="text">$ ./out/elc -rb ./test/basic.eir &gt; basic.rb
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text">$ ./out/elc -rb ./test/basic.eir &gt; basic.rb
 $ ruby basic.rb
 !!@X
 </code></pre></div><p><code>out/eli</code>はEIRをそのまま解釈して実行するインタプリタです。</p>
-<div class="highlight"><pre class="chroma"><code class="language-text" data-lang="text">$ ./out/eli ./test/basic.eir
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text">$ ./out/eli ./test/basic.eir
 !!@X
 </code></pre></div><h3 id="scratchプロジェクトの生成">Scratchプロジェクトの生成</h3>
 <p>Scratchバックエンドが出力したJSONからsb3ファイルを生成するための補助スクリプト(<a href="https://github.com/shinh/elvm/blob/master/tools/gen_scratch_sb3.sh">tools/gen_scratch_sb3.sh</a>)を作成しました。
 以下のように使うことができます。</p>
-<div class="highlight"><pre class="chroma"><code class="language-text" data-lang="text">$ ./out/elc -scratch3 ./test/echo.eir &gt; ./echo.eir.scratch3
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text">$ ./out/elc -scratch3 ./test/echo.eir &gt; ./echo.eir.scratch3
 $ ./tools/gen_scratch_sb3.sh ./echo.eir.scratch3
 $ ls echo.eir.scratch3.sb3
 echo.eir.scratch3.sb3
@@ -909,7 +909,7 @@ echo.eir.scratch3.sb3
 <p>コマンドラインから実行するにはtoolsディレクトリ以下にnpmパッケージ<a href="https://github.com/LLK/scratch-vm">scratch-vm</a>をインストールしておく必要があります。</p>
 <p><code>run_scratch.js</code> 側でエスケープ処理を行っているため、
 コマンドラインから実行する場合は特殊文字もそのまま入力できます。</p>
-<div class="highlight"><pre class="chroma"><code class="language-text" data-lang="text">$ cd tools
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text">$ cd tools
 $ npm install scratch-vm
 $ echo -e &#34;hello\nworld&#34; | node ./run_scratch.js ../echo.eir.scratch3.sb3
 hello
@@ -917,13 +917,13 @@ world
 </code></pre></div><p>ちなみに実行はかなり遅く、私の環境では結果が出力されるまでに20秒くらいかかりました<sup id="fnref:6"><a href="#fn:6" class="footnote-ref" role="doc-noteref">6</a></sup>。</p>
 <h3 id="c言語からの変換">C言語からの変換</h3>
 <p>以下のようにしてC言語で書かれたプログラム(<code>your_program.c</code>)をScratchプロジェクト(<code>your_program.scratch3.sb3</code>)へ変換できます。</p>
-<div class="highlight"><pre class="chroma"><code class="language-text" data-lang="text">$ ./out/8cc -Ilibc -S your_program.c -o your_program.eir
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text">$ ./out/8cc -Ilibc -S your_program.c -o your_program.eir
 $ ./out/elc -scratch3 your_program.eir &gt; your_program.scratch3
 $ ./tools/gen_scratch_sb3.sh your_program.scratch3
 $ ls your_program.scratch3.sb3
 your_program.scratch3.sb3
 </code></pre></div><h2 id="8cc-in-scratch">8cc in Scratch</h2>
-<div class="highlight"><pre class="chroma"><code class="language-text" data-lang="text">$ ./out/elc -scratch3 ./out/8cc.c.eir &gt; ./out/8cc.c.eir.scratch3  # 8ccをScratchに変換
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text">$ ./out/elc -scratch3 ./out/8cc.c.eir &gt; ./out/8cc.c.eir.scratch3  # 8ccをScratchに変換
 $ cat ./test/8cc.in
 int putchar(int x);
 
@@ -950,7 +950,7 @@ Scratchの仕様上は5MBの制限があるはずですが、scratch-vmではそ
 <p>この記事では今年の4月頃に取り組んだELVM Scratchバックエンドの実装について紹介しました。
 やはりいろいろな制約がある環境でのプログラミングは楽しいですね。</p>
 <p>みなさんも是非ScratchやELVMで遊んでみてください。</p>
-<div class="highlight"><pre class="chroma"><code class="language-c" data-lang="c"><span class="ln">1</span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="ln">1</span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
 </span><span class="ln">2</span><span class="cp"></span><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
 <span class="ln">3</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;Thank you for reading!</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
 <span class="ln">4</span>  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
@@ -992,25 +992,25 @@ Scratchの仕様上は5MBの制限があるはずですが、scratch-vmではそ
 <hr>
 <ol>
 <li id="fn:1" role="doc-endnote">
-<p>キャストのルールについては<a href="https://en.scratch-wiki.info/wiki/Casting">wikiのページ</a>にまとまっています。 <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<p>キャストのルールについては<a href="https://en.scratch-wiki.info/wiki/Casting">wikiのページ</a>にまとまっています。&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 <li id="fn:2" role="doc-endnote">
-<p>Scratchにおける数値の仕様は見つけられませんでしたが、おそらくJavaScriptのNumber型として実装されています。 <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<p>Scratchにおける数値の仕様は見つけられませんでしたが、おそらくJavaScriptのNumber型として実装されています。&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 <li id="fn:3" role="doc-endnote">
 <p>本当は半角バックスラッシュを使いたかったのですが、
 (おそらく)Scratchのバグによってプロジェクトが保存できなくなってしまうため、
-全角バックスラッシュを使いました。 <a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+全角バックスラッシュを使いました。&#160;<a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 <li id="fn:4" role="doc-endnote">
 <p>コスチュームとはキャラクターの見た目を変える機能のことで、
-ステージの背景を用いても同じことができます。 <a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+ステージの背景を用いても同じことができます。&#160;<a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 <li id="fn:5" role="doc-endnote">
-<p>24bitの値を16進で表記すると6文字必要ですが、Base64なら4文字で表現できます。 <a href="#fnref:5" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<p>24bitの値を16進で表記すると6文字必要ですが、Base64なら4文字で表現できます。&#160;<a href="#fnref:5" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 <li id="fn:6" role="doc-endnote">
-<p>Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz、メモリ32GiB、Ubuntu 18.04、node v8.10.0。 <a href="#fnref:6" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+<p>Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz、メモリ32GiB、Ubuntu 18.04、node v8.10.0。&#160;<a href="#fnref:6" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 </ol>
 </section>

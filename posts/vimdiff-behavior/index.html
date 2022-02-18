@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+<title>vimdiffの謎 | Reinventing Square Wheels - algon&#39;s blog</title>
+<meta charset="utf-8">
+<meta name="generator" content="Hugo 0.92.2" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://algon-320.github.io//css/index.css">
+<link rel="stylesheet" href="https://algon-320.github.io//css/syntax.css">
+<link rel="stylesheet" href="https://algon-320.github.io//css/overrides.css">
+<link rel="canonical" href="https://algon-320.github.io/posts/vimdiff-behavior/">
+<link rel="alternate" type="application/rss+xml" href="" title="Reinventing Square Wheels - algon&#39;s blog">
+</head>
+
+<body>
+<header>
+
+<a href="https://algon-320.github.io/">
+Reinventing&nbsp;Square&nbsp;Wheels
+ - algon's&nbsp;blog</a>
+
+
+<nav>
+
+<a href="/posts/">Posts</a>
+
+<a href="/about/">About</a>
+
+</nav>
+
+</header>
+
+<article>
+  <header>
+    <h1>vimdiffの謎</h1>
+    <time datetime="2022-02-18T16:07:00&#43;09:00">February 18, 2022</time>
+  </header>
+  <p>ファイルの差分を確認するためのコマンドとして<code>diff</code>コマンドがありますが、
+vimのインタフェースを用いて差分を確認できる<code>vimdiff</code>というコマンドもあります。</p>
+<pre tabindex="0"><code>$ vimdiff a.txt b.txt
+</code></pre><p>のように使います。
+vimdiffはdiffよりも見やすくて便利なのでよく使っています。</p>
+<p>ある日、ふとvimdiffの実体が気になって確認してみると、
+<code>/usr/bin/vim</code>へのシンボリックリンクになっていることに気がつきました。</p>
+<pre tabindex="0"><code>$ type vimdiff
+vimdiff is /usr/bin/vimdiff
+$ ls -l /usr/bin/vimdiff
+lrwxrwxrwx 1 root root 3 Jan 16 21:09 /usr/bin/vimdiff -&gt; vim*
+</code></pre><p>vimには<code>-d</code>というオプションがあり、このオプションを渡すとvimdiffと同じように差分表示モードで起動します。
+<code>vimdiff</code>は<code>vim -d</code>をラップしているスクリプトファイルか何かかと予想していたのですが、
+実体はvimへのシンボリックリンクでした。</p>
+<p>そうなると<code>vimdiff</code>と<code>vim</code>は何が違うんだと疑問に思うのですが、</p>
+<pre tabindex="0"><code>$ vim a.txt b.txt
+</code></pre><p>と</p>
+<pre tabindex="0"><code>$ vimdiff a.txt b.txt
+</code></pre><p>は明らかに挙動が異なります。
+シンボリックリンクに「特定のオプションを追加して起動する」なんていう機能は存在しないよなあと
+思いつつ調べてみると、stackoverflowに同じ全く同じ質問が見つかりました。</p>
+<p><a href="https://stackoverflow.com/questions/8876323/how-does-the-softlink-vimdiff-be-implemented">https://stackoverflow.com/questions/8876323/how-does-the-softlink-vimdiff-be-implemented</a></p>
+<p>結局これはどういう仕組みなのかというと、
+<strong>vimが<code>argv[0]</code>を見て挙動を変えている</strong>ということでした。</p>
+<p>C言語でユーザプログラムを書く際に、main関数の引数として<code>argv</code>をとることができます。
+普通、シェルは<code>argv[0]</code>に実行ファイルの名前を設定し、<code>argv[1]</code>以降にコマンドライン引数を格納します。
+実行ファイルへのシンボリックリンクの場合、<code>argv[0]</code>にはシンボリックリンクの名前が渡されることになります。</p>
+<p><code>vimdiff</code>を起動すると<code>argv[0]</code>には<code>vimdiff</code>が渡され、
+普通にvimを起動したときには<code>vim</code>が渡されることになります。
+vimは「main関数に渡された<code>argv[0]</code>が<code>vimdiff</code>だったら、<code>-d</code>オプションが指定されたときと同じように振る舞う」というようなことをやっているわけですね。</p>
+<p>以下のようなC言語のプログラムを書いてこの挙動を確認してみました。</p>
+<p>my-vim.c:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="ln"> 1</span><span class="cp">#include</span> <span class="cpf">&lt;libgen.h&gt;</span><span class="cp">
+</span><span class="ln"> 2</span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span><span class="ln"> 3</span><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span><span class="ln"> 4</span><span class="cp"></span>
+<span class="ln"> 5</span><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+<span class="ln"> 6</span>  <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+<span class="ln"> 7</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;my-vim.c: argv[0] is %s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="ln"> 8</span>
+<span class="ln"> 9</span>  <span class="c1">// argv[0] のファイル名が &#34;vimdiff&#34; の場合
+</span><span class="ln">10</span><span class="c1"></span>  <span class="k">if</span> <span class="p">(</span><span class="n">strcmp</span><span class="p">(</span><span class="n">basename</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="s">&#34;vimdiff&#34;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+<span class="ln">11</span>    <span class="n">printf</span><span class="p">(</span><span class="s">&#34;diff mode</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+<span class="ln">12</span>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+<span class="ln">13</span>    <span class="n">printf</span><span class="p">(</span><span class="s">&#34;normal mode</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+<span class="ln">14</span>  <span class="p">}</span>
+<span class="ln">15</span><span class="p">}</span>
+</code></pre></div><p>my-vimdiff.c:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="ln"> 1</span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span><span class="ln"> 2</span><span class="cp">#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+</span><span class="ln"> 3</span><span class="cp"></span>
+<span class="ln"> 4</span><span class="k">extern</span> <span class="kt">char</span> <span class="o">**</span><span class="n">environ</span><span class="p">;</span>
+<span class="ln"> 5</span>
+<span class="ln"> 6</span><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+<span class="ln"> 7</span>  <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+<span class="ln"> 8</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;my-vimdiff.c: argv[0] is %s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+<span class="ln"> 9</span>
+<span class="ln">10</span>  <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#34;vimdiff&#34;</span><span class="p">;</span>
+<span class="ln">11</span>  <span class="n">execve</span><span class="p">(</span><span class="s">&#34;./my-vim&#34;</span><span class="p">,</span> <span class="n">argv</span><span class="p">,</span> <span class="n">environ</span><span class="p">);</span>
+<span class="ln">12</span>  <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+<span class="ln">13</span><span class="p">}</span>
+</code></pre></div><p>実行結果:</p>
+<pre tabindex="0"><code>$ make my-vim
+cc     my-vim.c   -o my-vim
+$ make my-vimdiff
+cc     my-vimdiff.c   -o my-vimdiff
+$
+$ ./my-vim
+my-vim.c: argv[0] is ./my-vim
+normal mode
+$
+$ ./my-vimdiff
+my-vimdiff.c: argv[0] is ./my-vimdiff
+my-vim.c: argv[0] is vimdiff
+diff mode
+$
+$ ln -s my-vim vimdiff  # シンボリックリンクにした場合
+$ ./vimdiff
+my-vim.c: argv[0] is ./vimdiff
+diff mode
+</code></pre><p><code>my-vimdiff</code>ではシェルを使わずに、<code>execve</code>を直接呼んで<code>my-vim</code>を起動しています。
+このときに<code>argv[0]</code>に好きな文字列を渡すことができます。
+起動される<code>my-vim</code>側では、これを見て挙動を変えています。</p>
+<p>分かってしまえばなんだーという感じですが、<code>argv[0]</code>を見るという発想がなかったので驚きました。</p>
+<p>最後に、本物のvimのソースコードを確認してみると、
+<code>parse_command_name</code>という関数で<code>argv[0]</code>を見ていました。
+<code>vimdiff</code>以外にも<code>view</code>、<code>diff</code>、<code>viewdiff</code>などの名前でも挙動が変わるようです。
+<a href="https://github.com/vim/vim/blob/8e5ba693ad9377fbf4b047093624248b81eac854/src/main.c#L1835-L1924">https://github.com/vim/vim/blob/8e5ba693ad9377fbf4b047093624248b81eac854/src/main.c#L1835-L1924</a></p>
+<hr>
+<p>ちなみに、この方法はbusyboxでも使われていて、
+例えば<code>ls</code>という名前で<code>/usr/bin/busybox</code>へのシンボリックリンク作ると、このファイルは<code>busybox ls</code>のように振る舞います。</p>
+<pre tabindex="0"><code>$ ln -s /usr/bin/busybox ls
+$ busybox ls
+a.txt  b.txt  ls
+$ ./ls
+a.txt  b.txt  ls
+</code></pre><p>軽量Linuxディストリビューションとして有名なAlpine Linuxでは
+<code>/bin</code>以下の (<code>/bin/busybox</code>を除く) 全てのファイルは<code>busybox</code>へのシンボリックリンクになっています。</p>
+
+</article>
+
+
+
+</body>
+</html>
