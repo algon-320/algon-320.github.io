@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Rust on Reinventing Square Wheels</title>
+    <link>https://algon-320.github.io/tags/rust/</link>
+    <description>Recent content in Rust on Reinventing Square Wheels</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ja-jp</language>
+    <lastBuildDate>Wed, 18 May 2022 17:39:25 +0900</lastBuildDate><atom:link href="https://algon-320.github.io/tags/rust/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Rustのunitみたいな型</title>
+      <link>https://algon-320.github.io/posts/rust-unit-like/</link>
+      <pubDate>Wed, 18 May 2022 17:39:25 +0900</pubDate>
+      
+      <guid>https://algon-320.github.io/posts/rust-unit-like/</guid>
+      <description>unitっぽい型について書きます。
+unit型 Rustにはただ一つの値だけをもつunit型があります。 結果を返さない関数の戻り値の型として登場します。 型名・値どちらも()と書きます。
+unit-like構造体 「フィールドを持たない構造体」を独自に定義してunitのように使うこともできます。 このような構造体はunit-like structと呼ばれることがあります。 トレイトを実装したりメソッドを追加できる点でunit型と異なります。
+1struct Unitlike1;2struct Unitlike2();3struct Unitlike3{}45fn foo(_: Unitlike1){}67fn main(){8letu1: Unitlike1=Unitlike1;9letu2: Unitlike2=Unitlike2();10letu3: Unitlike3=Unitlike3{};1112foo(u1);// OK 13// foo(u2); // Error 14// foo(()); // Error 15}上の例では3つの構造体を定義していますが、これらは互いに異なる型になります。 当たり前ですが、Unitlike1の値を引数にとる関数にUnitlike2や()を渡すことはできません。
+ちなみにUnilike2のようにタプル構造体の形式で定義すると、 「コンストラクタの関数ポインタ」を得ることができるようです。 enumのタプル形式のバリアントでも同様にコンストラクタを得ることができ、たまに役に立ちます。
+1struct Unitlike2();23fn main(){4letu2_ctor: fn()-&amp;gt; Unitlike2=Unitlike2;5letu2: Unitlike2=u2_ctor();6}unitを含む構造体 更に似たような構造体として「unit型の値のみを持つ構造体」があります。
+1struct Unitlike4(());23fn main(){4letu4=Unitlike4(());5}Unitlike4はUnitlike2と似ていますが、コンストラクタが公開されない点が異なります。 別のモジュールで定義されている場合、pub structとして型自体が公開されていても、 外部からUnitlike4の値を作ることはできません。
+1mod unit{2pubstruct Unitlike2();34pubstruct Unitlike4(());5pubfn new_u4()-&amp;gt; Unitlike4{6Unitlike4(())7}89pubstruct Unitlike5(pub());10}1112fn main(){13letu2=unit::Unitlike2();// OK 14// let u4 = unit::Unitlike4(()); // Error 15letu4=unit::new_u4();// OK 16letu5=unit::Unitlike5(());// OK 17}Unitlike5のようにフィールドをpubにすれば、 モジュールの外部から作ることができるようになります。
+あえてUnitlike4のようにコンストラクタを隠して定義し、 意図的にCloneトレイトを実装しないことで、 事前条件を静的にチェックするような使い方ができそうです。</description>
+    </item>
+    
+  </channel>
+</rss>

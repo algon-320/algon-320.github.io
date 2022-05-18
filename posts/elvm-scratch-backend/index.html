@@ -3,7 +3,7 @@
 <head>
 <title>ELVM Scratch 3.0 backend | Reinventing Square Wheels - algon&#39;s blog</title>
 <meta charset="utf-8">
-<meta name="generator" content="Hugo 0.92.2" />
+<meta name="generator" content="Hugo 0.98.0" />
 <meta name="description" content="Scratchコード生成">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://algon-320.github.io//css/index.css">
@@ -249,62 +249,62 @@ ELVM IRを入力としてScratchのコードを出力するバックエンドを
 大まかには次のような雰囲気になっています。</p>
 <details>
 <summary>クリックで開く</summary>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="p">{</span>
-    <span class="nt">&#34;targets&#34;</span><span class="p">:[</span>
-        <span class="p">{</span>
-            <span class="nt">&#34;isStage&#34;</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span>
-            <span class="nt">&#34;name&#34;</span><span class="p">:</span><span class="s2">&#34;Stage&#34;</span><span class="p">,</span>
-            <span class="nt">&#34;variables&#34;</span><span class="p">:{</span>
-                <span class="nt">&#34;#r:a&#34;</span><span class="p">:[</span><span class="s2">&#34;a&#34;</span><span class="p">,</span> <span class="s2">&#34;0&#34;</span><span class="p">],</span>
-                <span class="nt">&#34;#r:b&#34;</span><span class="p">:[</span><span class="s2">&#34;b&#34;</span><span class="p">,</span> <span class="s2">&#34;0&#34;</span><span class="p">],</span>
-                <span class="err">...(略)...</span>
-            <span class="p">},</span>
-            <span class="nt">&#34;broadcasts&#34;</span><span class="p">:{},</span>
-            <span class="nt">&#34;blocks&#34;</span><span class="p">:{</span>
-                <span class="err">...(略)...</span>
-                <span class="nt">&#34;b250&#34;</span><span class="p">:{</span>
-                   <span class="nt">&#34;opcode&#34;</span><span class="p">:</span><span class="s2">&#34;data_setvariableto&#34;</span><span class="p">,</span>
-                   <span class="nt">&#34;next&#34;</span><span class="p">:</span><span class="s2">&#34;b251&#34;</span><span class="p">,</span>
-                   <span class="nt">&#34;parent&#34;</span><span class="p">:</span><span class="s2">&#34;b247&#34;</span><span class="p">,</span>
-                   <span class="nt">&#34;shadow&#34;</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span> <span class="nt">&#34;topLevel&#34;</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span>
-                   <span class="nt">&#34;inputs&#34;</span><span class="p">:{</span> <span class="nt">&#34;VALUE&#34;</span><span class="p">:[</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&#34;b249&#34;</span><span class="p">]},</span>
-                   <span class="nt">&#34;fields&#34;</span><span class="p">:{</span> <span class="nt">&#34;VARIABLE&#34;</span><span class="p">:[</span><span class="s2">&#34;b&#34;</span><span class="p">,</span> <span class="s2">&#34;#r:b&#34;</span><span class="p">]}</span>
-                <span class="p">},</span>
-                <span class="nt">&#34;b249&#34;</span><span class="p">:{</span>
-                   <span class="nt">&#34;opcode&#34;</span><span class="p">:</span><span class="s2">&#34;operator_mod&#34;</span><span class="p">,</span>
-                   <span class="nt">&#34;next&#34;</span><span class="p">:</span><span class="kc">null</span><span class="p">,</span>
-                   <span class="nt">&#34;parent&#34;</span><span class="p">:</span><span class="s2">&#34;b250&#34;</span><span class="p">,</span>
-                   <span class="nt">&#34;shadow&#34;</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span> <span class="nt">&#34;topLevel&#34;</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span>
-                   <span class="nt">&#34;inputs&#34;</span><span class="p">:{</span>
-                       <span class="nt">&#34;NUM1&#34;</span><span class="p">:[</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&#34;b248&#34;</span><span class="p">],</span>
-                       <span class="nt">&#34;NUM2&#34;</span><span class="p">:[</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&#34;16777216&#34;</span><span class="p">]]</span>
-                   <span class="p">},</span>
-                   <span class="nt">&#34;fields&#34;</span><span class="p">:{}</span>
-                <span class="p">},</span>
-                <span class="err">...(略)...</span>
-            <span class="p">},</span>
-            <span class="nt">&#34;comments&#34;</span><span class="p">:{},</span>
-            <span class="nt">&#34;currentCostume&#34;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
-            <span class="nt">&#34;costumes&#34;</span><span class="p">:[{</span>
-                <span class="nt">&#34;name&#34;</span><span class="p">:</span><span class="s2">&#34;backdrop&#34;</span><span class="p">,</span>
-                <span class="nt">&#34;assetId&#34;</span><span class="p">:</span><span class="s2">&#34;fcb8546c50e11d422b78fd55e34d7e7e&#34;</span><span class="p">,</span>
-                <span class="nt">&#34;md5ext&#34;</span><span class="p">:</span><span class="s2">&#34;fcb8546c50e11d422b78fd55e34d7e7e.svg&#34;</span><span class="p">,</span>
-                <span class="nt">&#34;dataFormat&#34;</span><span class="p">:</span><span class="s2">&#34;svg&#34;</span>
-            <span class="p">}],</span>
-            <span class="nt">&#34;sounds&#34;</span><span class="p">:[],</span>
-            <span class="nt">&#34;volume&#34;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span>
-            <span class="nt">&#34;layerOrder&#34;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
-            <span class="nt">&#34;tempo&#34;</span><span class="p">:</span><span class="mi">60</span><span class="p">,</span>
-            <span class="nt">&#34;videoTransparency&#34;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span>
-            <span class="nt">&#34;videoState&#34;</span><span class="p">:</span><span class="s2">&#34;on&#34;</span><span class="p">,</span>
-            <span class="nt">&#34;textToSpeechLanguage&#34;</span><span class="p">:</span><span class="kc">null</span>
-        <span class="p">}</span>
-    <span class="p">],</span>
-    <span class="nt">&#34;monitors&#34;</span><span class="p">:[],</span>
-    <span class="nt">&#34;extensions&#34;</span><span class="p">:[],</span>
-    <span class="nt">&#34;meta&#34;</span><span class="p">:{</span><span class="nt">&#34;semver&#34;</span><span class="p">:</span><span class="s2">&#34;3.0.0&#34;</span><span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div><p>重要なのは<code>&quot;variables&quot;</code>と<code>&quot;blocks&quot;</code>です。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;targets&#34;</span><span class="p">:[</span>
+</span></span><span class="line"><span class="cl">        <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;isStage&#34;</span><span class="p">:</span><span class="kc">true</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;name&#34;</span><span class="p">:</span><span class="s2">&#34;Stage&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;variables&#34;</span><span class="p">:{</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;#r:a&#34;</span><span class="p">:[</span><span class="s2">&#34;a&#34;</span><span class="p">,</span> <span class="s2">&#34;0&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;#r:b&#34;</span><span class="p">:[</span><span class="s2">&#34;b&#34;</span><span class="p">,</span> <span class="s2">&#34;0&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">                <span class="err">...(略)...</span>
+</span></span><span class="line"><span class="cl">            <span class="p">},</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;broadcasts&#34;</span><span class="p">:{},</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;blocks&#34;</span><span class="p">:{</span>
+</span></span><span class="line"><span class="cl">                <span class="err">...(略)...</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;b250&#34;</span><span class="p">:{</span>
+</span></span><span class="line"><span class="cl">                   <span class="nt">&#34;opcode&#34;</span><span class="p">:</span><span class="s2">&#34;data_setvariableto&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                   <span class="nt">&#34;next&#34;</span><span class="p">:</span><span class="s2">&#34;b251&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                   <span class="nt">&#34;parent&#34;</span><span class="p">:</span><span class="s2">&#34;b247&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                   <span class="nt">&#34;shadow&#34;</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span> <span class="nt">&#34;topLevel&#34;</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                   <span class="nt">&#34;inputs&#34;</span><span class="p">:{</span> <span class="nt">&#34;VALUE&#34;</span><span class="p">:[</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&#34;b249&#34;</span><span class="p">]},</span>
+</span></span><span class="line"><span class="cl">                   <span class="nt">&#34;fields&#34;</span><span class="p">:{</span> <span class="nt">&#34;VARIABLE&#34;</span><span class="p">:[</span><span class="s2">&#34;b&#34;</span><span class="p">,</span> <span class="s2">&#34;#r:b&#34;</span><span class="p">]}</span>
+</span></span><span class="line"><span class="cl">                <span class="p">},</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;b249&#34;</span><span class="p">:{</span>
+</span></span><span class="line"><span class="cl">                   <span class="nt">&#34;opcode&#34;</span><span class="p">:</span><span class="s2">&#34;operator_mod&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                   <span class="nt">&#34;next&#34;</span><span class="p">:</span><span class="kc">null</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                   <span class="nt">&#34;parent&#34;</span><span class="p">:</span><span class="s2">&#34;b250&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                   <span class="nt">&#34;shadow&#34;</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span> <span class="nt">&#34;topLevel&#34;</span><span class="p">:</span><span class="kc">false</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                   <span class="nt">&#34;inputs&#34;</span><span class="p">:{</span>
+</span></span><span class="line"><span class="cl">                       <span class="nt">&#34;NUM1&#34;</span><span class="p">:[</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&#34;b248&#34;</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">                       <span class="nt">&#34;NUM2&#34;</span><span class="p">:[</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&#34;16777216&#34;</span><span class="p">]]</span>
+</span></span><span class="line"><span class="cl">                   <span class="p">},</span>
+</span></span><span class="line"><span class="cl">                   <span class="nt">&#34;fields&#34;</span><span class="p">:{}</span>
+</span></span><span class="line"><span class="cl">                <span class="p">},</span>
+</span></span><span class="line"><span class="cl">                <span class="err">...(略)...</span>
+</span></span><span class="line"><span class="cl">            <span class="p">},</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;comments&#34;</span><span class="p">:{},</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;currentCostume&#34;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;costumes&#34;</span><span class="p">:[{</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;name&#34;</span><span class="p">:</span><span class="s2">&#34;backdrop&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;assetId&#34;</span><span class="p">:</span><span class="s2">&#34;fcb8546c50e11d422b78fd55e34d7e7e&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;md5ext&#34;</span><span class="p">:</span><span class="s2">&#34;fcb8546c50e11d422b78fd55e34d7e7e.svg&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">                <span class="nt">&#34;dataFormat&#34;</span><span class="p">:</span><span class="s2">&#34;svg&#34;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}],</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;sounds&#34;</span><span class="p">:[],</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;volume&#34;</span><span class="p">:</span><span class="mi">100</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;layerOrder&#34;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;tempo&#34;</span><span class="p">:</span><span class="mi">60</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;videoTransparency&#34;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;videoState&#34;</span><span class="p">:</span><span class="s2">&#34;on&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">            <span class="nt">&#34;textToSpeechLanguage&#34;</span><span class="p">:</span><span class="kc">null</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">],</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;monitors&#34;</span><span class="p">:[],</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;extensions&#34;</span><span class="p">:[],</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;meta&#34;</span><span class="p">:{</span><span class="nt">&#34;semver&#34;</span><span class="p">:</span><span class="s2">&#34;3.0.0&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>重要なのは<code>&quot;variables&quot;</code>と<code>&quot;blocks&quot;</code>です。</p>
 <p><code>&quot;variables&quot;</code>にはプログラム内で使用している変数についての情報が入っています。</p>
 <p><code>&quot;blocks&quot;</code>にはブロックの種類やブロック同士がどのように繋がっているかなどといった情報が入っています。</p>
 </details>
@@ -786,97 +786,97 @@ wikiのJSONの仕様が不完全だったため、コードを読みに行った
 <p>方針としては、まずはブロックの木を構築し、これをトラバースしながらJSONを出力しています。</p>
 <p>バックエンドのエントリポイントは <code>void target_scratch3(Module *module)</code> です。<code>module-&gt;data</code> に静的に配置するデータの情報が、<code>module-&gt;text</code> に命令列が格納されています。</p>
 <p>以下の部分で各コンポーネントを構築しています。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="ln">1635</span>  <span class="n">scr3_impl_read_stdin</span><span class="p">();</span>
-<span class="ln">1636</span>  <span class="n">scr3_impl_ascii_encode</span><span class="p">();</span>
-<span class="ln">1637</span>  <span class="n">scr3_impl_ascii_decode</span><span class="p">();</span>
-<span class="ln">1638</span>  <span class="n">scr3_impl_base64_decode</span><span class="p">();</span>
-<span class="ln">1639</span>  <span class="n">scr3_impl_base64_encode</span><span class="p">();</span>
-<span class="ln">1640</span>  <span class="n">scr3_impl_writeback_page</span><span class="p">();</span>
-<span class="ln">1641</span>  <span class="n">scr3_impl_expand_page</span><span class="p">();</span>
-<span class="ln">1642</span>  <span class="n">scr3_impl_store</span><span class="p">();</span>
-<span class="ln">1643</span>  <span class="n">scr3_impl_load</span><span class="p">();</span>
-<span class="ln">1644</span>  <span class="n">scr3_impl_initialize</span><span class="p">();</span>
-<span class="ln">1645</span>  <span class="n">scr3_impl_getchar</span><span class="p">();</span>
-<span class="ln">1646</span>  <span class="n">scr3_impl_putchar</span><span class="p">();</span>
-<span class="ln">1647</span>  <span class="n">scr3_impl_init_memory</span><span class="p">(</span><span class="n">module</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
-<span class="ln">1648</span>  <span class="n">scr3_impl_main_loop</span><span class="p">(</span><span class="n">module</span><span class="o">-&gt;</span><span class="n">text</span><span class="p">);</span>
-</code></pre></div><p>その後、JSONを出力します。
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="ln">1635</span><span class="cl">  <span class="n">scr3_impl_read_stdin</span><span class="p">();</span>
+</span></span><span class="line"><span class="ln">1636</span><span class="cl">  <span class="n">scr3_impl_ascii_encode</span><span class="p">();</span>
+</span></span><span class="line"><span class="ln">1637</span><span class="cl">  <span class="n">scr3_impl_ascii_decode</span><span class="p">();</span>
+</span></span><span class="line"><span class="ln">1638</span><span class="cl">  <span class="n">scr3_impl_base64_decode</span><span class="p">();</span>
+</span></span><span class="line"><span class="ln">1639</span><span class="cl">  <span class="n">scr3_impl_base64_encode</span><span class="p">();</span>
+</span></span><span class="line"><span class="ln">1640</span><span class="cl">  <span class="n">scr3_impl_writeback_page</span><span class="p">();</span>
+</span></span><span class="line"><span class="ln">1641</span><span class="cl">  <span class="n">scr3_impl_expand_page</span><span class="p">();</span>
+</span></span><span class="line"><span class="ln">1642</span><span class="cl">  <span class="n">scr3_impl_store</span><span class="p">();</span>
+</span></span><span class="line"><span class="ln">1643</span><span class="cl">  <span class="n">scr3_impl_load</span><span class="p">();</span>
+</span></span><span class="line"><span class="ln">1644</span><span class="cl">  <span class="n">scr3_impl_initialize</span><span class="p">();</span>
+</span></span><span class="line"><span class="ln">1645</span><span class="cl">  <span class="n">scr3_impl_getchar</span><span class="p">();</span>
+</span></span><span class="line"><span class="ln">1646</span><span class="cl">  <span class="n">scr3_impl_putchar</span><span class="p">();</span>
+</span></span><span class="line"><span class="ln">1647</span><span class="cl">  <span class="n">scr3_impl_init_memory</span><span class="p">(</span><span class="n">module</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1648</span><span class="cl">  <span class="n">scr3_impl_main_loop</span><span class="p">(</span><span class="n">module</span><span class="o">-&gt;</span><span class="n">text</span><span class="p">);</span>
+</span></span></code></pre></div><p>その後、JSONを出力します。
 Scratchプログラムの変数(レジスタやリスト)、ブロック(プログラム本体)、背景(ASCIIテーブルとBase64テーブル)などを出力していきます。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="ln">1652</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;{</span><span class="se">\&#34;</span><span class="s">targets</span><span class="se">\&#34;</span><span class="s">:[{</span><span class="se">\&#34;</span><span class="s">isStage</span><span class="se">\&#34;</span><span class="s">:true,</span><span class="se">\&#34;</span><span class="s">name</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">Stage</span><span class="se">\&#34;</span><span class="s">,&#34;</span><span class="p">);</span>
-<span class="ln">1653</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">variables</span><span class="se">\&#34;</span><span class="s">:{&#34;</span><span class="p">);</span>
-<span class="ln">1654</span>  <span class="k">for</span> <span class="p">(</span><span class="n">scr3_reg_t</span> <span class="n">reg</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">reg</span> <span class="o">&lt;</span> <span class="n">scr3_reg_count</span><span class="p">;</span> <span class="n">reg</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-<span class="ln">1655</span>    <span class="k">if</span> <span class="p">(</span><span class="n">reg</span><span class="p">)</span> <span class="n">putchar</span><span class="p">(</span><span class="sc">&#39;,&#39;</span><span class="p">);</span>
-<span class="ln">1656</span>    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span> <span class="o">=</span> <span class="n">scr3_register_name</span><span class="p">[</span><span class="n">reg</span><span class="p">];</span>
-<span class="ln">1657</span>    <span class="n">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">#r:%s</span><span class="se">\&#34;</span><span class="s">:[</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">, </span><span class="se">\&#34;</span><span class="s">0</span><span class="se">\&#34;</span><span class="s">]&#34;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
-<span class="ln">1658</span>  <span class="p">}</span>
-<span class="ln">1659</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;},</span><span class="se">\&#34;</span><span class="s">lists</span><span class="se">\&#34;</span><span class="s">:{&#34;</span><span class="p">);</span>
-<span class="ln">1660</span>  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">list</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">list</span> <span class="o">&lt;</span> <span class="n">SCR3_NUM_OF_LIST</span><span class="p">;</span> <span class="n">list</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-<span class="ln">1661</span>    <span class="k">if</span> <span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="n">putchar</span><span class="p">(</span><span class="sc">&#39;,&#39;</span><span class="p">);</span>
-<span class="ln">1662</span>    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span> <span class="o">=</span> <span class="n">SCR3_LIST_NAME</span><span class="p">[</span><span class="n">list</span><span class="p">];</span>
-<span class="ln">1663</span>    <span class="n">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">#l:%s</span><span class="se">\&#34;</span><span class="s">:[</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">, []]&#34;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
-<span class="ln">1664</span>  <span class="p">}</span>
-<span class="ln">1665</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;},</span><span class="se">\&#34;</span><span class="s">broadcasts</span><span class="se">\&#34;</span><span class="s">:{},</span><span class="se">\&#34;</span><span class="s">blocks</span><span class="se">\&#34;</span><span class="s">:{&#34;</span><span class="p">);</span>
-<span class="ln">1666</span>
-<span class="ln">1667</span>  <span class="n">scr3_emit_all</span><span class="p">();</span>
-<span class="ln">1668</span>
-<span class="ln">1669</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;},</span><span class="se">\&#34;</span><span class="s">comments</span><span class="se">\&#34;</span><span class="s">:{},</span><span class="se">\&#34;</span><span class="s">currentCostume</span><span class="se">\&#34;</span><span class="s">:192,</span><span class="se">\&#34;</span><span class="s">costumes</span><span class="se">\&#34;</span><span class="s">:[&#34;</span><span class="p">);</span>
-<span class="ln">1670</span>
-<span class="ln">1671</span>  <span class="c1">// embed ASCII table in backdrops
-</span><span class="ln">1672</span><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">128</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-<span class="ln">1673</span>    <span class="kt">char</span> <span class="n">escaped_char_str</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
-<span class="ln">1674</span>    <span class="k">if</span> <span class="p">(</span><span class="mi">32</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="o">&amp;&amp;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">127</span><span class="p">)</span> <span class="p">{</span>
-<span class="ln">1675</span>      <span class="n">sprintf</span><span class="p">(</span><span class="n">escaped_char_str</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="sc">&#39;&#34;&#39;</span> <span class="o">||</span> <span class="n">i</span> <span class="o">==</span> <span class="sc">&#39;\\&#39;</span><span class="p">)</span> <span class="o">?</span> <span class="s">&#34;</span><span class="se">\\</span><span class="s">%c&#34;</span> <span class="o">:</span> <span class="s">&#34;%c&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
-<span class="ln">1676</span>    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="mi">10</span><span class="p">)</span> <span class="p">{</span>
-<span class="ln">1677</span>      <span class="n">sprintf</span><span class="p">(</span><span class="n">escaped_char_str</span><span class="p">,</span> <span class="s">&#34;＼n&#34;</span><span class="p">);</span>
-<span class="ln">1678</span>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-<span class="ln">1679</span>      <span class="n">sprintf</span><span class="p">(</span><span class="n">escaped_char_str</span><span class="p">,</span> <span class="s">&#34;＼%d&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
-<span class="ln">1680</span>    <span class="p">}</span>
-<span class="ln">1681</span>    <span class="n">printf</span><span class="p">(</span>
-<span class="ln">1682</span>        <span class="s">&#34;{</span><span class="se">\&#34;</span><span class="s">name</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">assetId</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">md5ext</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s.svg</span><span class="se">\&#34;</span><span class="s">,&#34;</span>
-<span class="ln">1683</span>        <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">dataFormat</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">svg</span><span class="se">\&#34;</span><span class="s">},&#34;</span><span class="p">,</span>
-<span class="ln">1684</span>        <span class="n">escaped_char_str</span><span class="p">,</span> <span class="n">SCR3_SVG_MD5</span><span class="p">,</span> <span class="n">SCR3_SVG_MD5</span><span class="p">);</span>
-<span class="ln">1685</span>  <span class="p">}</span>
-<span class="ln">1686</span>  <span class="c1">// embed Base64 table in backdrops (with prefix &#39;!&#39;)
-</span><span class="ln">1687</span><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">64</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-<span class="ln">1688</span>    <span class="n">printf</span><span class="p">(</span>
-<span class="ln">1689</span>        <span class="s">&#34;{</span><span class="se">\&#34;</span><span class="s">name</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">!%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">assetId</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">md5ext</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s.svg</span><span class="se">\&#34;</span><span class="s">,&#34;</span>
-<span class="ln">1690</span>        <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">dataFormat</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">svg</span><span class="se">\&#34;</span><span class="s">},&#34;</span><span class="p">,</span>
-<span class="ln">1691</span>        <span class="n">SCR3_BASE64_TABLE</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">SCR3_SVG_MD5</span><span class="p">,</span> <span class="n">SCR3_SVG_MD5</span><span class="p">);</span>
-<span class="ln">1692</span>  <span class="p">}</span>
-<span class="ln">1693</span>
-<span class="ln">1694</span>  <span class="c1">// main backdrop
-</span><span class="ln">1695</span><span class="c1"></span>  <span class="n">printf</span><span class="p">(</span>
-<span class="ln">1696</span>      <span class="s">&#34;{</span><span class="se">\&#34;</span><span class="s">name</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">backdrop</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">assetId</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">md5ext</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s.svg</span><span class="se">\&#34;</span><span class="s">,&#34;</span>
-<span class="ln">1697</span>      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">dataFormat</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">svg</span><span class="se">\&#34;</span><span class="s">}&#34;</span><span class="p">,</span>
-<span class="ln">1698</span>      <span class="n">SCR3_SVG_MD5</span><span class="p">,</span> <span class="n">SCR3_SVG_MD5</span><span class="p">);</span>
-<span class="ln">1699</span>
-<span class="ln">1700</span>  <span class="n">printf</span><span class="p">(</span>
-<span class="ln">1701</span>      <span class="s">&#34;],</span><span class="se">\&#34;</span><span class="s">sounds</span><span class="se">\&#34;</span><span class="s">:[],</span><span class="se">\&#34;</span><span class="s">volume</span><span class="se">\&#34;</span><span class="s">:100,</span><span class="se">\&#34;</span><span class="s">layerOrder</span><span class="se">\&#34;</span><span class="s">:0,</span><span class="se">\&#34;</span><span class="s">tempo</span><span class="se">\&#34;</span><span class="s">:60,&#34;</span>
-<span class="ln">1702</span>      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">videoTransparency</span><span class="se">\&#34;</span><span class="s">:50,</span><span class="se">\&#34;</span><span class="s">videoState</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">on</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">textToSpeechLanguage</span><span class="se">\&#34;</span><span class="s">:&#34;</span>
-<span class="ln">1703</span>      <span class="s">&#34;null}],</span><span class="se">\&#34;</span><span class="s">monitors</span><span class="se">\&#34;</span><span class="s">:[{</span><span class="se">\&#34;</span><span class="s">id</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">#l:stdout</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">mode</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">list</span><span class="se">\&#34;</span><span class="s">,&#34;</span>
-<span class="ln">1704</span>      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">opcode</span><span class="se">\&#34;</span><span class="s">:&#34;</span><span class="p">);</span>
-<span class="ln">1705</span>  <span class="n">printf</span><span class="p">(</span>
-<span class="ln">1706</span>      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">data_listcontents</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">params</span><span class="se">\&#34;</span><span class="s">:{</span><span class="se">\&#34;</span><span class="s">LIST</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">stdout</span><span class="se">\&#34;</span><span class="s">},</span><span class="se">\&#34;</span><span class="s">spriteName</span><span class="se">\&#34;</span><span class="s">:&#34;</span>
-<span class="ln">1707</span>      <span class="s">&#34;null,</span><span class="se">\&#34;</span><span class="s">value</span><span class="se">\&#34;</span><span class="s">:[],</span><span class="se">\&#34;</span><span class="s">width</span><span class="se">\&#34;</span><span class="s">:480,</span><span class="se">\&#34;</span><span class="s">height</span><span class="se">\&#34;</span><span class="s">:280,</span><span class="se">\&#34;</span><span class="s">x</span><span class="se">\&#34;</span><span class="s">:0,</span><span class="se">\&#34;</span><span class="s">y</span><span class="se">\&#34;</span><span class="s">:0,&#34;</span>
-<span class="ln">1708</span>      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">visible</span><span class="se">\&#34;</span><span class="s">:true}],</span><span class="se">\&#34;</span><span class="s">extensions</span><span class="se">\&#34;</span><span class="s">:[],</span><span class="se">\&#34;</span><span class="s">meta</span><span class="se">\&#34;</span><span class="s">:{</span><span class="se">\&#34;</span><span class="s">semver</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">3.0.0</span><span class="se">\&#34;</span><span class="s">}}&#34;</span><span class="p">);</span>
-<span class="ln">1709</span>  <span class="k">return</span><span class="p">;</span>
-</code></pre></div><p>C言語にはraw stringリテラルがないため、頑張ってダブルクオートをエスケープしています。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="ln">1652</span><span class="cl">  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;{</span><span class="se">\&#34;</span><span class="s">targets</span><span class="se">\&#34;</span><span class="s">:[{</span><span class="se">\&#34;</span><span class="s">isStage</span><span class="se">\&#34;</span><span class="s">:true,</span><span class="se">\&#34;</span><span class="s">name</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">Stage</span><span class="se">\&#34;</span><span class="s">,&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1653</span><span class="cl">  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">variables</span><span class="se">\&#34;</span><span class="s">:{&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1654</span><span class="cl">  <span class="k">for</span> <span class="p">(</span><span class="n">scr3_reg_t</span> <span class="n">reg</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">reg</span> <span class="o">&lt;</span> <span class="n">scr3_reg_count</span><span class="p">;</span> <span class="n">reg</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="ln">1655</span><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">reg</span><span class="p">)</span> <span class="n">putchar</span><span class="p">(</span><span class="sc">&#39;,&#39;</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1656</span><span class="cl">    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span> <span class="o">=</span> <span class="n">scr3_register_name</span><span class="p">[</span><span class="n">reg</span><span class="p">];</span>
+</span></span><span class="line"><span class="ln">1657</span><span class="cl">    <span class="n">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">#r:%s</span><span class="se">\&#34;</span><span class="s">:[</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">, </span><span class="se">\&#34;</span><span class="s">0</span><span class="se">\&#34;</span><span class="s">]&#34;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1658</span><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="ln">1659</span><span class="cl">  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;},</span><span class="se">\&#34;</span><span class="s">lists</span><span class="se">\&#34;</span><span class="s">:{&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1660</span><span class="cl">  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">list</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">list</span> <span class="o">&lt;</span> <span class="n">SCR3_NUM_OF_LIST</span><span class="p">;</span> <span class="n">list</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="ln">1661</span><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="n">list</span><span class="p">)</span> <span class="n">putchar</span><span class="p">(</span><span class="sc">&#39;,&#39;</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1662</span><span class="cl">    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span> <span class="o">=</span> <span class="n">SCR3_LIST_NAME</span><span class="p">[</span><span class="n">list</span><span class="p">];</span>
+</span></span><span class="line"><span class="ln">1663</span><span class="cl">    <span class="n">printf</span><span class="p">(</span><span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">#l:%s</span><span class="se">\&#34;</span><span class="s">:[</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">, []]&#34;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1664</span><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="ln">1665</span><span class="cl">  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;},</span><span class="se">\&#34;</span><span class="s">broadcasts</span><span class="se">\&#34;</span><span class="s">:{},</span><span class="se">\&#34;</span><span class="s">blocks</span><span class="se">\&#34;</span><span class="s">:{&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1666</span><span class="cl">
+</span></span><span class="line"><span class="ln">1667</span><span class="cl">  <span class="n">scr3_emit_all</span><span class="p">();</span>
+</span></span><span class="line"><span class="ln">1668</span><span class="cl">
+</span></span><span class="line"><span class="ln">1669</span><span class="cl">  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;},</span><span class="se">\&#34;</span><span class="s">comments</span><span class="se">\&#34;</span><span class="s">:{},</span><span class="se">\&#34;</span><span class="s">currentCostume</span><span class="se">\&#34;</span><span class="s">:192,</span><span class="se">\&#34;</span><span class="s">costumes</span><span class="se">\&#34;</span><span class="s">:[&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1670</span><span class="cl">
+</span></span><span class="line"><span class="ln">1671</span><span class="cl">  <span class="c1">// embed ASCII table in backdrops
+</span></span></span><span class="line"><span class="ln">1672</span><span class="cl"><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">128</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="ln">1673</span><span class="cl">    <span class="kt">char</span> <span class="n">escaped_char_str</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+</span></span><span class="line"><span class="ln">1674</span><span class="cl">    <span class="k">if</span> <span class="p">(</span><span class="mi">32</span> <span class="o">&lt;=</span> <span class="n">i</span> <span class="o">&amp;&amp;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">127</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="ln">1675</span><span class="cl">      <span class="n">sprintf</span><span class="p">(</span><span class="n">escaped_char_str</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="sc">&#39;&#34;&#39;</span> <span class="o">||</span> <span class="n">i</span> <span class="o">==</span> <span class="sc">&#39;\\&#39;</span><span class="p">)</span> <span class="o">?</span> <span class="s">&#34;</span><span class="se">\\</span><span class="s">%c&#34;</span> <span class="o">:</span> <span class="s">&#34;%c&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1676</span><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="mi">10</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="ln">1677</span><span class="cl">      <span class="n">sprintf</span><span class="p">(</span><span class="n">escaped_char_str</span><span class="p">,</span> <span class="s">&#34;＼n&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1678</span><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="ln">1679</span><span class="cl">      <span class="n">sprintf</span><span class="p">(</span><span class="n">escaped_char_str</span><span class="p">,</span> <span class="s">&#34;＼%d&#34;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1680</span><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="ln">1681</span><span class="cl">    <span class="n">printf</span><span class="p">(</span>
+</span></span><span class="line"><span class="ln">1682</span><span class="cl">        <span class="s">&#34;{</span><span class="se">\&#34;</span><span class="s">name</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">assetId</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">md5ext</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s.svg</span><span class="se">\&#34;</span><span class="s">,&#34;</span>
+</span></span><span class="line"><span class="ln">1683</span><span class="cl">        <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">dataFormat</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">svg</span><span class="se">\&#34;</span><span class="s">},&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="ln">1684</span><span class="cl">        <span class="n">escaped_char_str</span><span class="p">,</span> <span class="n">SCR3_SVG_MD5</span><span class="p">,</span> <span class="n">SCR3_SVG_MD5</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1685</span><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="ln">1686</span><span class="cl">  <span class="c1">// embed Base64 table in backdrops (with prefix &#39;!&#39;)
+</span></span></span><span class="line"><span class="ln">1687</span><span class="cl"><span class="c1"></span>  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">64</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="ln">1688</span><span class="cl">    <span class="n">printf</span><span class="p">(</span>
+</span></span><span class="line"><span class="ln">1689</span><span class="cl">        <span class="s">&#34;{</span><span class="se">\&#34;</span><span class="s">name</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">!%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">assetId</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">md5ext</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s.svg</span><span class="se">\&#34;</span><span class="s">,&#34;</span>
+</span></span><span class="line"><span class="ln">1690</span><span class="cl">        <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">dataFormat</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">svg</span><span class="se">\&#34;</span><span class="s">},&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="ln">1691</span><span class="cl">        <span class="n">SCR3_BASE64_TABLE</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">SCR3_SVG_MD5</span><span class="p">,</span> <span class="n">SCR3_SVG_MD5</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1692</span><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="ln">1693</span><span class="cl">
+</span></span><span class="line"><span class="ln">1694</span><span class="cl">  <span class="c1">// main backdrop
+</span></span></span><span class="line"><span class="ln">1695</span><span class="cl"><span class="c1"></span>  <span class="n">printf</span><span class="p">(</span>
+</span></span><span class="line"><span class="ln">1696</span><span class="cl">      <span class="s">&#34;{</span><span class="se">\&#34;</span><span class="s">name</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">backdrop</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">assetId</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">md5ext</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">%s.svg</span><span class="se">\&#34;</span><span class="s">,&#34;</span>
+</span></span><span class="line"><span class="ln">1697</span><span class="cl">      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">dataFormat</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">svg</span><span class="se">\&#34;</span><span class="s">}&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="ln">1698</span><span class="cl">      <span class="n">SCR3_SVG_MD5</span><span class="p">,</span> <span class="n">SCR3_SVG_MD5</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1699</span><span class="cl">
+</span></span><span class="line"><span class="ln">1700</span><span class="cl">  <span class="n">printf</span><span class="p">(</span>
+</span></span><span class="line"><span class="ln">1701</span><span class="cl">      <span class="s">&#34;],</span><span class="se">\&#34;</span><span class="s">sounds</span><span class="se">\&#34;</span><span class="s">:[],</span><span class="se">\&#34;</span><span class="s">volume</span><span class="se">\&#34;</span><span class="s">:100,</span><span class="se">\&#34;</span><span class="s">layerOrder</span><span class="se">\&#34;</span><span class="s">:0,</span><span class="se">\&#34;</span><span class="s">tempo</span><span class="se">\&#34;</span><span class="s">:60,&#34;</span>
+</span></span><span class="line"><span class="ln">1702</span><span class="cl">      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">videoTransparency</span><span class="se">\&#34;</span><span class="s">:50,</span><span class="se">\&#34;</span><span class="s">videoState</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">on</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">textToSpeechLanguage</span><span class="se">\&#34;</span><span class="s">:&#34;</span>
+</span></span><span class="line"><span class="ln">1703</span><span class="cl">      <span class="s">&#34;null}],</span><span class="se">\&#34;</span><span class="s">monitors</span><span class="se">\&#34;</span><span class="s">:[{</span><span class="se">\&#34;</span><span class="s">id</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">#l:stdout</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">mode</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">list</span><span class="se">\&#34;</span><span class="s">,&#34;</span>
+</span></span><span class="line"><span class="ln">1704</span><span class="cl">      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">opcode</span><span class="se">\&#34;</span><span class="s">:&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1705</span><span class="cl">  <span class="n">printf</span><span class="p">(</span>
+</span></span><span class="line"><span class="ln">1706</span><span class="cl">      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">data_listcontents</span><span class="se">\&#34;</span><span class="s">,</span><span class="se">\&#34;</span><span class="s">params</span><span class="se">\&#34;</span><span class="s">:{</span><span class="se">\&#34;</span><span class="s">LIST</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">stdout</span><span class="se">\&#34;</span><span class="s">},</span><span class="se">\&#34;</span><span class="s">spriteName</span><span class="se">\&#34;</span><span class="s">:&#34;</span>
+</span></span><span class="line"><span class="ln">1707</span><span class="cl">      <span class="s">&#34;null,</span><span class="se">\&#34;</span><span class="s">value</span><span class="se">\&#34;</span><span class="s">:[],</span><span class="se">\&#34;</span><span class="s">width</span><span class="se">\&#34;</span><span class="s">:480,</span><span class="se">\&#34;</span><span class="s">height</span><span class="se">\&#34;</span><span class="s">:280,</span><span class="se">\&#34;</span><span class="s">x</span><span class="se">\&#34;</span><span class="s">:0,</span><span class="se">\&#34;</span><span class="s">y</span><span class="se">\&#34;</span><span class="s">:0,&#34;</span>
+</span></span><span class="line"><span class="ln">1708</span><span class="cl">      <span class="s">&#34;</span><span class="se">\&#34;</span><span class="s">visible</span><span class="se">\&#34;</span><span class="s">:true}],</span><span class="se">\&#34;</span><span class="s">extensions</span><span class="se">\&#34;</span><span class="s">:[],</span><span class="se">\&#34;</span><span class="s">meta</span><span class="se">\&#34;</span><span class="s">:{</span><span class="se">\&#34;</span><span class="s">semver</span><span class="se">\&#34;</span><span class="s">:</span><span class="se">\&#34;</span><span class="s">3.0.0</span><span class="se">\&#34;</span><span class="s">}}&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">1709</span><span class="cl">  <span class="k">return</span><span class="p">;</span>
+</span></span></code></pre></div><p>C言語にはraw stringリテラルがないため、頑張ってダブルクオートをエスケープしています。</p>
 <hr>
 <p>ちなみに、<code>#define RAW(...) (#__VA_ARGS__)</code> というマクロによってraw stringリテラルを模倣することもできますが、連続する空白文字が半角スペース1個に置換されてしまいます。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="ln"> 1</span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
-</span><span class="ln"> 2</span><span class="cp">#define RAW(...) (#__VA_ARGS__)
-</span><span class="ln"> 3</span><span class="cp"></span><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
-<span class="ln"> 4</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;%s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span><span class="n">RAW</span><span class="p">(</span>
-<span class="ln"> 5</span>    <span class="p">{</span>
-<span class="ln"> 6</span>      <span class="s">&#34;foo&#34;</span><span class="o">:</span> <span class="p">[</span>
-<span class="ln"> 7</span>        <span class="s">&#34;bar&#34;</span><span class="p">,</span>
-<span class="ln"> 8</span>        <span class="s">&#34;baz&#34;</span>
-<span class="ln"> 9</span>      <span class="p">]</span>
-<span class="ln">10</span>    <span class="p">}</span>
-<span class="ln">11</span>  <span class="p">));</span>
-<span class="ln">12</span>  <span class="c1">// =&gt; { &#34;foo&#34;: [ &#34;bar&#34;, &#34;baz&#34; ] }
-</span><span class="ln">13</span><span class="c1"></span><span class="p">}</span>
-</code></pre></div><p>初めはこれを使って実装を進めていたのですが、
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="ln"> 1</span><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="ln"> 2</span><span class="cl"><span class="cp">#define RAW(...) (#__VA_ARGS__)
+</span></span></span><span class="line"><span class="ln"> 3</span><span class="cl"><span class="cp"></span><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="ln"> 4</span><span class="cl">  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;%s</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span><span class="n">RAW</span><span class="p">(</span>
+</span></span><span class="line"><span class="ln"> 5</span><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="ln"> 6</span><span class="cl">      <span class="s">&#34;foo&#34;</span><span class="o">:</span> <span class="p">[</span>
+</span></span><span class="line"><span class="ln"> 7</span><span class="cl">        <span class="s">&#34;bar&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="ln"> 8</span><span class="cl">        <span class="s">&#34;baz&#34;</span>
+</span></span><span class="line"><span class="ln"> 9</span><span class="cl">      <span class="p">]</span>
+</span></span><span class="line"><span class="ln">10</span><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="ln">11</span><span class="cl">  <span class="p">));</span>
+</span></span><span class="line"><span class="ln">12</span><span class="cl">  <span class="c1">// =&gt; { &#34;foo&#34;: [ &#34;bar&#34;, &#34;baz&#34; ] }
+</span></span></span><span class="line"><span class="ln">13</span><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span></code></pre></div><p>初めはこれを使って実装を進めていたのですが、
 エディタのシンタックスハイライトやフォーマッタがうまく動かなかったり、
 あまりきれいな方法とは言えないので結局使いませんでした。</p>
 <h2 id="実行">実行</h2>
@@ -884,62 +884,62 @@ Scratchプログラムの変数(レジスタやリスト)、ブロック(プロ�
 <p>elvmのリポジトリのルートディレクトリで<code>make</code>を実行すると、<code>out/</code>以下に<code>8cc</code>、<code>elc</code>、<code>eli</code>などが生成されます。</p>
 <p><code>out/8cc</code>はELVM IRを出力する機能が加わった8ccです。
 C言語のソースファイル(<code>*.c</code>)をコンパイルしてEIRファイル(<code>*.eir</code>)を出力することができます。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text">$ ./out/8cc -S -Ilibc ./test/fizzbuzz.c -o ./fizzbuzz.eir
-$ ls ./fizzbuzz.eir
-./fizzbuzz.eir
-</code></pre></div><p><code>out/elc</code>はEIRファイルを入力に取って、各バックエンドの出力を得ることができます。
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">$ ./out/8cc -S -Ilibc ./test/fizzbuzz.c -o ./fizzbuzz.eir
+</span></span><span class="line"><span class="cl">$ ls ./fizzbuzz.eir
+</span></span><span class="line"><span class="cl">./fizzbuzz.eir
+</span></span></code></pre></div><p><code>out/elc</code>はEIRファイルを入力に取って、各バックエンドの出力を得ることができます。
 コマンドラインオプションでバックエンドの名前を指定します。
 バックエンドの名前は<code>target/elc.c</code>の<code>get_target_func</code>から確認できます。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text">$ ./out/elc -rb ./test/basic.eir &gt; basic.rb
-$ ruby basic.rb
-!!@X
-</code></pre></div><p><code>out/eli</code>はEIRをそのまま解釈して実行するインタプリタです。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text">$ ./out/eli ./test/basic.eir
-!!@X
-</code></pre></div><h3 id="scratchプロジェクトの生成">Scratchプロジェクトの生成</h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">$ ./out/elc -rb ./test/basic.eir &gt; basic.rb
+</span></span><span class="line"><span class="cl">$ ruby basic.rb
+</span></span><span class="line"><span class="cl">!!@X
+</span></span></code></pre></div><p><code>out/eli</code>はEIRをそのまま解釈して実行するインタプリタです。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">$ ./out/eli ./test/basic.eir
+</span></span><span class="line"><span class="cl">!!@X
+</span></span></code></pre></div><h3 id="scratchプロジェクトの生成">Scratchプロジェクトの生成</h3>
 <p>Scratchバックエンドが出力したJSONからsb3ファイルを生成するための補助スクリプト(<a href="https://github.com/shinh/elvm/blob/master/tools/gen_scratch_sb3.sh">tools/gen_scratch_sb3.sh</a>)を作成しました。
 以下のように使うことができます。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text">$ ./out/elc -scratch3 ./test/echo.eir &gt; ./echo.eir.scratch3
-$ ./tools/gen_scratch_sb3.sh ./echo.eir.scratch3
-$ ls echo.eir.scratch3.sb3
-echo.eir.scratch3.sb3
-</code></pre></div><p>elcが出力したJSONファイル(<code>./echo.eir.scratch3</code>)を引数として渡して実行すると、同じディレクトリに<code>*.sb3</code>ファイルが生成されます。生成された<code>*.sb3</code>ファイルはScratchエディタから読み込んで実行できます。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">$ ./out/elc -scratch3 ./test/echo.eir &gt; ./echo.eir.scratch3
+</span></span><span class="line"><span class="cl">$ ./tools/gen_scratch_sb3.sh ./echo.eir.scratch3
+</span></span><span class="line"><span class="cl">$ ls echo.eir.scratch3.sb3
+</span></span><span class="line"><span class="cl">echo.eir.scratch3.sb3
+</span></span></code></pre></div><p>elcが出力したJSONファイル(<code>./echo.eir.scratch3</code>)を引数として渡して実行すると、同じディレクトリに<code>*.sb3</code>ファイルが生成されます。生成された<code>*.sb3</code>ファイルはScratchエディタから読み込んで実行できます。</p>
 <h3 id="コマンドラインからの実行">コマンドラインからの実行</h3>
 <p>生成されたScratchプログラムをコマンドラインから実行するための補助スクリプト(<a href="https://github.com/shinh/elvm/blob/master/tools/runscratch3.sh">tools/runscratch3.sh</a>, <a href="https://github.com/shinh/elvm/blob/master/tools/run_scratch.js">tools/run_scratch.js</a>)を作成しました。</p>
 <p>コマンドラインから実行するにはtoolsディレクトリ以下にnpmパッケージ<a href="https://github.com/LLK/scratch-vm">scratch-vm</a>をインストールしておく必要があります。</p>
 <p><code>run_scratch.js</code> 側でエスケープ処理を行っているため、
 コマンドラインから実行する場合は特殊文字もそのまま入力できます。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text">$ cd tools
-$ npm install scratch-vm
-$ echo -e &#34;hello\nworld&#34; | node ./run_scratch.js ../echo.eir.scratch3.sb3
-hello
-world
-</code></pre></div><p>ちなみに実行はかなり遅く、私の環境では結果が出力されるまでに20秒くらいかかりました<sup id="fnref:6"><a href="#fn:6" class="footnote-ref" role="doc-noteref">6</a></sup>。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">$ cd tools
+</span></span><span class="line"><span class="cl">$ npm install scratch-vm
+</span></span><span class="line"><span class="cl">$ echo -e &#34;hello\nworld&#34; | node ./run_scratch.js ../echo.eir.scratch3.sb3
+</span></span><span class="line"><span class="cl">hello
+</span></span><span class="line"><span class="cl">world
+</span></span></code></pre></div><p>ちなみに実行はかなり遅く、私の環境では結果が出力されるまでに20秒くらいかかりました<sup id="fnref:6"><a href="#fn:6" class="footnote-ref" role="doc-noteref">6</a></sup>。</p>
 <h3 id="c言語からの変換">C言語からの変換</h3>
 <p>以下のようにしてC言語で書かれたプログラム(<code>your_program.c</code>)をScratchプロジェクト(<code>your_program.scratch3.sb3</code>)へ変換できます。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text">$ ./out/8cc -Ilibc -S your_program.c -o your_program.eir
-$ ./out/elc -scratch3 your_program.eir &gt; your_program.scratch3
-$ ./tools/gen_scratch_sb3.sh your_program.scratch3
-$ ls your_program.scratch3.sb3
-your_program.scratch3.sb3
-</code></pre></div><h2 id="8cc-in-scratch">8cc in Scratch</h2>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text">$ ./out/elc -scratch3 ./out/8cc.c.eir &gt; ./out/8cc.c.eir.scratch3  # 8ccをScratchに変換
-$ cat ./test/8cc.in
-int putchar(int x);
-
-int main() {
-  putchar(&#39;X&#39;);
-  return 0;
-}
-$ time nodejs --stack-size=65500 ./tools/run_scratch.js \
-&gt; ./out/8cc.c.eir.scratch3 &lt; ./test/8cc.in &gt; ./8cc.in.eir # Scratch版8ccでコンパイルしてEIRを出力
-
-real    92m52.362s
-user    90m44.119s
-sys     0m10.411s
-$ ./out/eli ./8cc.in.eir  # eliで実行
-X$ 
-</code></pre></div><p>1.5時間くらいかかりましたが、Scratch上で8ccが動きました!!</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">$ ./out/8cc -Ilibc -S your_program.c -o your_program.eir
+</span></span><span class="line"><span class="cl">$ ./out/elc -scratch3 your_program.eir &gt; your_program.scratch3
+</span></span><span class="line"><span class="cl">$ ./tools/gen_scratch_sb3.sh your_program.scratch3
+</span></span><span class="line"><span class="cl">$ ls your_program.scratch3.sb3
+</span></span><span class="line"><span class="cl">your_program.scratch3.sb3
+</span></span></code></pre></div><h2 id="8cc-in-scratch">8cc in Scratch</h2>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">$ ./out/elc -scratch3 ./out/8cc.c.eir &gt; ./out/8cc.c.eir.scratch3  # 8ccをScratchに変換
+</span></span><span class="line"><span class="cl">$ cat ./test/8cc.in
+</span></span><span class="line"><span class="cl">int putchar(int x);
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">int main() {
+</span></span><span class="line"><span class="cl">  putchar(&#39;X&#39;);
+</span></span><span class="line"><span class="cl">  return 0;
+</span></span><span class="line"><span class="cl">}
+</span></span><span class="line"><span class="cl">$ time nodejs --stack-size=65500 ./tools/run_scratch.js \
+</span></span><span class="line"><span class="cl">&gt; ./out/8cc.c.eir.scratch3 &lt; ./test/8cc.in &gt; ./8cc.in.eir # Scratch版8ccでコンパイルしてEIRを出力
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">real    92m52.362s
+</span></span><span class="line"><span class="cl">user    90m44.119s
+</span></span><span class="line"><span class="cl">sys     0m10.411s
+</span></span><span class="line"><span class="cl">$ ./out/eli ./8cc.in.eir  # eliで実行
+</span></span><span class="line"><span class="cl">X$ 
+</span></span></code></pre></div><p>1.5時間くらいかかりましたが、Scratch上で8ccが動きました!!</p>
 <p>生成された <code>./out/8cc.c.eir.scratch3</code> のサイズは46MBくらいありました。
 Scratchの仕様上は5MBの制限があるはずですが、scratch-vmではそれを超えるものでも一応実行できるようです。
 ちなみに、Scratchエディタからは読み込むことができませんでした。</p>
@@ -950,12 +950,12 @@ Scratchの仕様上は5MBの制限があるはずですが、scratch-vmではそ
 <p>この記事では今年の4月頃に取り組んだELVM Scratchバックエンドの実装について紹介しました。
 やはりいろいろな制約がある環境でのプログラミングは楽しいですね。</p>
 <p>みなさんも是非ScratchやELVMで遊んでみてください。</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="ln">1</span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
-</span><span class="ln">2</span><span class="cp"></span><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
-<span class="ln">3</span>  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;Thank you for reading!</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
-<span class="ln">4</span>  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-<span class="ln">5</span><span class="p">}</span>
-</code></pre></div><p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="ln">1</span><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="ln">2</span><span class="cl"><span class="cp"></span><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="ln">3</span><span class="cl">  <span class="n">printf</span><span class="p">(</span><span class="s">&#34;Thank you for reading!</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">4</span><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="ln">5</span><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>
   <img src="images/thank_you.png" alt="images/thank_you.png">
 
 </p>
@@ -988,32 +988,32 @@ Scratchの仕様上は5MBの制限があるはずですが、scratch-vmではそ
 <a data-pocket-label="pocket" data-pocket-count="horizontal" class="pocket-btn" data-lang="en"></a>
 <script type="text/javascript">!function(d,i){if(!d.getElementById(i)){var j=d.createElement("script");j.id=i;j.src="https://widgets.getpocket.com/v1/j/btn.js?v=1";var w=d.getElementById(i);d.body.appendChild(j);}}(document,"pocket-btn-js");</script>
 </span>
-<section class="footnotes" role="doc-endnotes">
+<div class="footnotes" role="doc-endnotes">
 <hr>
 <ol>
-<li id="fn:1" role="doc-endnote">
+<li id="fn:1">
 <p>キャストのルールについては<a href="https://en.scratch-wiki.info/wiki/Casting">wikiのページ</a>にまとまっています。&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
-<li id="fn:2" role="doc-endnote">
+<li id="fn:2">
 <p>Scratchにおける数値の仕様は見つけられませんでしたが、おそらくJavaScriptのNumber型として実装されています。&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
-<li id="fn:3" role="doc-endnote">
+<li id="fn:3">
 <p>本当は半角バックスラッシュを使いたかったのですが、
 (おそらく)Scratchのバグによってプロジェクトが保存できなくなってしまうため、
 全角バックスラッシュを使いました。&#160;<a href="#fnref:3" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
-<li id="fn:4" role="doc-endnote">
+<li id="fn:4">
 <p>コスチュームとはキャラクターの見た目を変える機能のことで、
 ステージの背景を用いても同じことができます。&#160;<a href="#fnref:4" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
-<li id="fn:5" role="doc-endnote">
+<li id="fn:5">
 <p>24bitの値を16進で表記すると6文字必要ですが、Base64なら4文字で表現できます。&#160;<a href="#fnref:5" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
-<li id="fn:6" role="doc-endnote">
+<li id="fn:6">
 <p>Intel(R) Core(TM) i7-9700K CPU @ 3.60GHz、メモリ32GiB、Ubuntu 18.04、node v8.10.0。&#160;<a href="#fnref:6" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
 </li>
 </ol>
-</section>
+</div>
 
 </article>
 

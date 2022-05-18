@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+<title>Rustのunitみたいな型 | Reinventing Square Wheels - algon&#39;s blog</title>
+<meta charset="utf-8">
+<meta name="generator" content="Hugo 0.98.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://algon-320.github.io//css/index.css">
+<link rel="stylesheet" href="https://algon-320.github.io//css/syntax.css">
+<link rel="stylesheet" href="https://algon-320.github.io//css/overrides.css">
+<link rel="canonical" href="https://algon-320.github.io/posts/rust-unit-like/">
+<link rel="alternate" type="application/rss+xml" href="" title="Reinventing Square Wheels - algon&#39;s blog">
+</head>
+
+<body>
+<header>
+
+<a href="https://algon-320.github.io/">
+Reinventing&nbsp;Square&nbsp;Wheels
+ - algon's&nbsp;blog</a>
+
+
+<nav>
+
+<a href="/posts/">Posts</a>
+
+<a href="/about/">About</a>
+
+</nav>
+
+</header>
+
+<article>
+  <header>
+    <h1>Rustのunitみたいな型</h1>
+    <time datetime="2022-05-18T17:39:25&#43;09:00">May 18, 2022</time>
+  </header>
+  <p>unitっぽい型について書きます。</p>
+<h2 id="unit型">unit型</h2>
+<p>Rustにはただ一つの値だけをもつ<a href="https://doc.rust-lang.org/std/primitive.unit.html">unit型</a>があります。
+結果を返さない関数の戻り値の型として登場します。
+型名・値どちらも<code>()</code>と書きます。</p>
+<h2 id="unit-like構造体">unit-like構造体</h2>
+<p>「フィールドを持たない構造体」を独自に定義してunitのように使うこともできます。
+このような構造体はunit-like structと呼ばれることがあります。
+トレイトを実装したりメソッドを追加できる点でunit型と異なります。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rust" data-lang="rust"><span class="line"><span class="ln"> 1</span><span class="cl"><span class="k">struct</span> <span class="nc">Unitlike1</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 2</span><span class="cl"><span class="w"></span><span class="k">struct</span> <span class="nc">Unitlike2</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 3</span><span class="cl"><span class="w"></span><span class="k">struct</span> <span class="nc">Unitlike3</span><span class="p">{}</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 4</span><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="ln"> 5</span><span class="cl"><span class="w"></span><span class="k">fn</span> <span class="nf">foo</span><span class="p">(</span><span class="n">_</span>: <span class="nc">Unitlike1</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 6</span><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="ln"> 7</span><span class="cl"><span class="w"></span><span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 8</span><span class="cl"><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">u1</span>: <span class="nc">Unitlike1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Unitlike1</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 9</span><span class="cl"><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">u2</span>: <span class="nc">Unitlike2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Unitlike2</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="ln">10</span><span class="cl"><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">u3</span>: <span class="nc">Unitlike3</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Unitlike3</span><span class="p">{};</span><span class="w">
+</span></span></span><span class="line"><span class="ln">11</span><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="ln">12</span><span class="cl"><span class="w">    </span><span class="n">foo</span><span class="p">(</span><span class="n">u1</span><span class="p">);</span><span class="w">  </span><span class="c1">// OK
+</span></span></span><span class="line"><span class="ln">13</span><span class="cl"><span class="c1">//  foo(u2);  // Error
+</span></span></span><span class="line"><span class="ln">14</span><span class="cl"><span class="c1">//  foo(());  // Error
+</span></span></span><span class="line"><span class="ln">15</span><span class="cl"><span class="c1"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>上の例では3つの構造体を定義していますが、これらは互いに異なる型になります。
+当たり前ですが、<code>Unitlike1</code>の値を引数にとる関数に<code>Unitlike2</code>や<code>()</code>を渡すことはできません。</p>
+<p>ちなみに<code>Unilike2</code>のようにタプル構造体の形式で定義すると、
+「コンストラクタの関数ポインタ」を得ることができるようです。
+<code>enum</code>のタプル形式のバリアントでも同様にコンストラクタを得ることができ、たまに役に立ちます。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rust" data-lang="rust"><span class="line"><span class="ln">1</span><span class="cl"><span class="k">struct</span> <span class="nc">Unitlike2</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="ln">2</span><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="ln">3</span><span class="cl"><span class="w"></span><span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="ln">4</span><span class="cl"><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">u2_ctor</span>: <span class="nc">fn</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nc">Unitlike2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Unitlike2</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="ln">5</span><span class="cl"><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">u2</span>: <span class="nc">Unitlike2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">u2_ctor</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="ln">6</span><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h2 id="unitを含む構造体">unitを含む構造体</h2>
+<p>更に似たような構造体として「unit型の値のみを持つ構造体」があります。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rust" data-lang="rust"><span class="line"><span class="ln">1</span><span class="cl"><span class="k">struct</span> <span class="nc">Unitlike4</span><span class="p">(());</span><span class="w">
+</span></span></span><span class="line"><span class="ln">2</span><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="ln">3</span><span class="cl"><span class="w"></span><span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="ln">4</span><span class="cl"><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">u4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Unitlike4</span><span class="p">(());</span><span class="w">
+</span></span></span><span class="line"><span class="ln">5</span><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p><code>Unitlike4</code>は<code>Unitlike2</code>と似ていますが、コンストラクタが公開されない点が異なります。
+別のモジュールで定義されている場合、<code>pub struct</code>として型自体が公開されていても、
+外部から<code>Unitlike4</code>の値を作ることはできません。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rust" data-lang="rust"><span class="line"><span class="ln"> 1</span><span class="cl"><span class="k">mod</span> <span class="nn">unit</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 2</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">Unitlike2</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 3</span><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="ln"> 4</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">Unitlike4</span><span class="p">(());</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 5</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">new_u4</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nc">Unitlike4</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 6</span><span class="cl"><span class="w">        </span><span class="n">Unitlike4</span><span class="p">(())</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 7</span><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 8</span><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="ln"> 9</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">Unitlike5</span><span class="p">(</span><span class="k">pub</span><span class="w"> </span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="ln">10</span><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="ln">11</span><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="ln">12</span><span class="cl"><span class="w"></span><span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="ln">13</span><span class="cl"><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">u2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unit</span>::<span class="n">Unitlike2</span><span class="p">();</span><span class="w">    </span><span class="c1">// OK
+</span></span></span><span class="line"><span class="ln">14</span><span class="cl"><span class="c1">//  let u4 = unit::Unitlike4(());  // Error
+</span></span></span><span class="line"><span class="ln">15</span><span class="cl"><span class="c1"></span><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">u4</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unit</span>::<span class="n">new_u4</span><span class="p">();</span><span class="w">       </span><span class="c1">// OK
+</span></span></span><span class="line"><span class="ln">16</span><span class="cl"><span class="c1"></span><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">u5</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unit</span>::<span class="n">Unitlike5</span><span class="p">(());</span><span class="w">  </span><span class="c1">// OK
+</span></span></span><span class="line"><span class="ln">17</span><span class="cl"><span class="c1"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p><code>Unitlike5</code>のようにフィールドを<code>pub</code>にすれば、
+モジュールの外部から作ることができるようになります。</p>
+<p>あえて<code>Unitlike4</code>のようにコンストラクタを隠して定義し、
+意図的に<a href="https://doc.rust-lang.org/std/clone/trait.Clone.html">Cloneトレイト</a>を実装しないことで、
+事前条件を静的にチェックするような使い方ができそうです。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rust" data-lang="rust"><span class="line"><span class="ln"> 1</span><span class="cl"><span class="k">mod</span> <span class="nn">some_module</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 2</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">F1Called</span><span class="p">(());</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 3</span><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="ln"> 4</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">f1</span><span class="p">()</span><span class="w"> </span>-&gt; <span class="nc">F1Called</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 5</span><span class="cl"><span class="w">        </span><span class="n">F1Called</span><span class="p">(())</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 6</span><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 7</span><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="ln"> 8</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">fn</span> <span class="nf">f2</span><span class="p">(</span><span class="n">_</span>: <span class="nc">F1Called</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 9</span><span class="cl"><span class="w">        </span><span class="fm">println!</span><span class="p">(</span><span class="s">&#34;必ずf1が先に呼ばれているはず!&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="ln">10</span><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="ln">11</span><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="ln">12</span><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="ln">13</span><span class="cl"><span class="w"></span><span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="ln">14</span><span class="cl"><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">some_module</span>::<span class="n">f1</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="ln">15</span><span class="cl"><span class="w">    </span><span class="n">some_module</span>::<span class="n">f2</span><span class="p">(</span><span class="n">token</span><span class="p">);</span><span class="w">  </span><span class="c1">// f1を呼ばずにf2を呼ぶことはできない
+</span></span></span><span class="line"><span class="ln">16</span><span class="cl"><span class="c1"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h2 id="空のenum">空のenum</h2>
+<p>空の<code>enum</code>を用いて、値を持たない型を定義できます。
+コンパイル時にのみ使われる型レベルのタグとして用いることができます。</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rust" data-lang="rust"><span class="line"><span class="ln">1</span><span class="cl"><span class="k">enum</span> <span class="nc">Empty</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span></span></span></code></pre></div><h2 id="まとめ">まとめ</h2>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-rust" data-lang="rust"><span class="line"><span class="ln"> 1</span><span class="cl"><span class="k">mod</span> <span class="nn">unit</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 2</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">A</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 3</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">B</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 4</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">C</span><span class="p">(());</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 5</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">Cp</span><span class="p">(</span><span class="k">pub</span><span class="w"> </span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 6</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">D</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 7</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">E</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">e</span>: <span class="p">()</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 8</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">struct</span> <span class="nc">Ep</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">pub</span><span class="w"> </span><span class="n">e</span>: <span class="p">()</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="ln"> 9</span><span class="cl"><span class="w">    </span><span class="k">pub</span><span class="w"> </span><span class="k">enum</span> <span class="nc">F</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span></span></span><span class="line"><span class="ln">10</span><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="ln">11</span><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="ln">12</span><span class="cl"><span class="w"></span><span class="k">fn</span> <span class="nf">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="ln">13</span><span class="cl"><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unit</span>::<span class="n">A</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="ln">14</span><span class="cl"><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unit</span>::<span class="n">B</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="ln">15</span><span class="cl"><span class="w"></span><span class="c1">//  let c = unit::C(()); // Error
+</span></span></span><span class="line"><span class="ln">16</span><span class="cl"><span class="c1"></span><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unit</span>::<span class="n">Cp</span><span class="p">(());</span><span class="w">
+</span></span></span><span class="line"><span class="ln">17</span><span class="cl"><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unit</span>::<span class="n">D</span><span class="w"> </span><span class="p">{};</span><span class="w">
+</span></span></span><span class="line"><span class="ln">18</span><span class="cl"><span class="w"></span><span class="c1">//  let e = unit::E { e: () }; // Error
+</span></span></span><span class="line"><span class="ln">19</span><span class="cl"><span class="c1"></span><span class="w">    </span><span class="kd">let</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unit</span>::<span class="n">Ep</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">e</span>: <span class="p">()</span><span class="w"> </span><span class="p">};</span><span class="w">
+</span></span></span><span class="line"><span class="ln">20</span><span class="cl"><span class="w"></span><span class="c1">//  let f = F::???;  // ムリ
+</span></span></span><span class="line"><span class="ln">21</span><span class="cl"><span class="c1"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><hr>
+<span>
+<a href="https://twitter.com/share?ref_src=twsrc%5Etfw" class="twitter-share-button" data-related="algon_320" data-show-count="false">Tweet</a>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<a data-pocket-label="pocket" data-pocket-count="horizontal" class="pocket-btn" data-lang="en"></a>
+<script type="text/javascript">!function(d,i){if(!d.getElementById(i)){var j=d.createElement("script");j.id=i;j.src="https://widgets.getpocket.com/v1/j/btn.js?v=1";var w=d.getElementById(i);d.body.appendChild(j);}}(document,"pocket-btn-js");</script>
+</span>
+
+</article>
+
+
+
+</body>
+</html>
