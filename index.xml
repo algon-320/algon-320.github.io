@@ -74,9 +74,8 @@ Scratchエディタ
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://algon-320.github.io/about/</guid>
-      <description>こんにちは、algonです！
-Accounts  Twitter: @algon_320 GitHub: algon-320  Interests  低レイヤ系 プログラミングテクニック コンピュータ関連のトリビア的話題  ブックマーク
- リンク集 Github Stars  Works  作ったものなどまとめ  poor-mans-vpn ナイーブなL3 VPN (Rust) wheel スタックマシン+VM+コンパイラ (Rust) daily X11用のウィンドウマネージャ (Rust) raft RaftのPony言語による実装 (Pony) tenki-rs 天気予報をターミナルに表示する (Rust) rusty-xv6 (WIP) xv6をRustで再実装する試み (Rust, x86) cdd 予め登録しておいたディレクトリに瞬時にcdできるツール (Bash) miniocaml OCaml風言語のインタプリタ・コンパイラ (OCaml, LLVM) OCaml Kaleidoscope in LLVM9.0.0 LLVMチュートリアルでハマったポイントまとめ (OCaml, LLVM) toyterm ターミナルエミュレータ (Rust) regex-vm VM型の正規表現エンジン (Rust) tinyws 簡易的なウィンドウシステム (C) msh 簡易的なシェル (Rust) Kyopro-Ratings 競プロサイトのレーティングを取ってきてJSONにして返すサーバ (Rust) KIDE 競プロ用ツール (Go) graph-vis-tools グラフビジュアライザ (TypeScript)   Contact Me E-mail: algon.</description>
+      <description>こんにちは!
+Contact Me  GitHub: algon-320 Twitter: @algon_320 E-mail: algon.0320@gmail.com  </description>
     </item>
     
   </channel>
