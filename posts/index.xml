@@ -6,7 +6,23 @@
     <description>Recent content in Posts on Reinventing Square Wheels</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ja-jp</language>
-    <lastBuildDate>Wed, 18 May 2022 17:39:25 +0900</lastBuildDate><atom:link href="https://algon-320.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 10 Jun 2022 13:09:19 +0900</lastBuildDate><atom:link href="https://algon-320.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>glibcのmemfrob関数</title>
+      <link>https://algon-320.github.io/posts/memfrob/</link>
+      <pubDate>Fri, 10 Jun 2022 13:09:19 +0900</pubDate>
+      
+      <guid>https://algon-320.github.io/posts/memfrob/</guid>
+      <description>少し前に、glibcにmemfrobという関数があることを知りました。
+指定したメモリ領域を暗号化する関数らしいです。
+memfrob関数 #define _GNU_SOURCE #include &amp;lt;string.h&amp;gt; void *memfrob(void *s, size_t n); manページ では以下のように説明されています。
+ The memfrob() function encrypts the first n bytes of the memory area s by exclusive-ORing each character with the number 42.
+ sからnバイトの領域に対して42をXORすることによって暗号化すると言っています。
+説明は以下のように続きます。
+ The effect can be reversed by using memfrob() on the encrypted memory area.
+Note that this function is not a proper encryption routine as the XOR constant is fixed, and is suitable only for hiding strings.</description>
+    </item>
+    
     <item>
       <title>Rustのunitみたいな型</title>
       <link>https://algon-320.github.io/posts/rust-unit-like/</link>

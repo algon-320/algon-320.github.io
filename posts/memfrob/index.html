@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja-jp">
+<head>
+<title>glibcのmemfrob関数 | Reinventing Square Wheels - algon&#39;s blog</title>
+<meta charset="utf-8">
+<meta name="generator" content="Hugo 0.99.1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://algon-320.github.io//css/index.css">
+<link rel="stylesheet" href="https://algon-320.github.io//css/syntax.css">
+<link rel="stylesheet" href="https://algon-320.github.io//css/overrides.css">
+<link rel="stylesheet" href="https://algon-320.github.io//css/fontawesome/css/all.min.css">
+<link rel="canonical" href="https://algon-320.github.io/posts/memfrob/">
+<link rel="alternate" type="application/rss+xml" href="" title="Reinventing Square Wheels - algon&#39;s blog">
+</head>
+
+<body>
+<header>
+
+<a href="https://algon-320.github.io/">
+Reinventing&nbsp;Square&nbsp;Wheels
+ - algon's&nbsp;blog</a>
+
+
+<nav>
+
+<a href="/posts/">Posts</a>
+
+<a href="/about/">About</a>
+
+</nav>
+
+</header>
+
+<article>
+  <header>
+    <h1>glibcのmemfrob関数</h1>
+    <time datetime="2022-06-10T13:09:19&#43;09:00">June 10, 2022</time>
+  </header>
+  <p>少し前に、glibcに<code>memfrob</code>という関数があることを知りました。<br>
+指定したメモリ領域を<em>暗号化</em>する関数らしいです。</p>
+<h2 id="memfrob関数">memfrob関数</h2>
+<pre tabindex="0"><code>#define _GNU_SOURCE
+#include &lt;string.h&gt;
+void *memfrob(void *s, size_t n);
+</code></pre><p><a href="https://man7.org/linux/man-pages/man3/memfrob.3.html">manページ</a>
+では以下のように説明されています。</p>
+<blockquote>
+<p>The memfrob() function encrypts the first n bytes of the memory area s by exclusive-ORing each character with the number 42.</p>
+</blockquote>
+<p><code>s</code>から<code>n</code>バイトの領域に対して<strong>42をXORする</strong>ことによって暗号化すると言っています。</p>
+<p>説明は以下のように続きます。</p>
+<blockquote>
+<p>The effect can be  reversed by using memfrob() on the encrypted memory area.</p>
+<p>Note that this function is not a proper encryption routine as the XOR constant is fixed, and is suitable only for hiding strings.</p>
+</blockquote>
+<p>XORする値が定数なので、これは正しい暗号化ではなく、
+データを隠す目的にのみ適していると言っています。</p>
+<h2 id="42">42</h2>
+<p>わざわざライブラリに入っている必要もないような関数ですが、
+マジックナンバーの42が気になります。</p>
+<p><a href="https://sourceware.org/git/?p=glibc.git;a=blob_plain;f=NEWS;hb=HEAD">glibcのリリースノート</a>を見ると、次のような記述が見つかります。</p>
+<blockquote>
+<p>* The new functions `strfry&rsquo; and `memfrob&rsquo; do mysterious and wonderful things to your strings.</p>
+</blockquote>
+<p>mysteriousでwonderfulなことを行うと書かれています。</p>
+<p>さらに調べると、LWNに投稿された<a href="https://lwn.net/Articles/334168/">コメント</a>に<code>strfry</code>と<code>memfrob</code>についての話が見つかりました。
+どうやら初期の頃にジョークで追加されたものがそのまま残っているという経緯みたいですね。</p>
+<p>42の意味ははっきりしませんが、
+やはり「<a href="https://www.google.com/search?q=%E7%94%9F%E5%91%BD%E3%80%81%E5%AE%87%E5%AE%99%E3%80%81%E3%81%9D%E3%81%97%E3%81%A6%E4%B8%87%E7%89%A9%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6%E3%81%AE%E7%A9%B6%E6%A5%B5%E3%81%AE%E7%96%91%E5%95%8F%E3%81%AE%E7%AD%94%E3%81%88">生命、宇宙、そして万物についての究極の疑問の答え</a>」なのでしょうか。</p>
+<h2 id="使ってみる">使ってみる</h2>
+<p>せっかくなのでmemfrob関数を使ってみました<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>。</p>
+<h4 id="do_memfrobc">do_memfrob.c</h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="ln"> 1</span><span class="cl"><span class="cp">#define _GNU_SOURCE
+</span></span></span><span class="line"><span class="ln"> 2</span><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="ln"> 3</span><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="ln"> 4</span><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="ln"> 5</span><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="ln"> 6</span><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="ln"> 7</span><span class="cl">  <span class="k">static</span> <span class="kt">char</span> <span class="n">buf</span><span class="p">[</span><span class="mi">4096</span><span class="p">];</span>
+</span></span><span class="line"><span class="ln"> 8</span><span class="cl">  <span class="kt">int</span> <span class="n">nb</span> <span class="o">=</span> <span class="n">fread</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="k">sizeof</span> <span class="n">buf</span><span class="p">,</span> <span class="n">stdin</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln"> 9</span><span class="cl">  <span class="n">memfrob</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="n">nb</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">10</span><span class="cl">  <span class="n">fwrite</span><span class="p">(</span><span class="n">buf</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nb</span><span class="p">,</span> <span class="n">stdout</span><span class="p">);</span>
+</span></span><span class="line"><span class="ln">11</span><span class="cl">  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="ln">12</span><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>1行目で<code>_GNU_SOURCE</code>を定義して4行目で<code>string.h</code>をインクルードしています。
+標準入力から最大4096バイト読み込み、<code>memfrob</code>関数を適用した結果を標準出力に書き出しています。</p>
+<h4 id="実行例">実行例</h4>
+<pre tabindex="0"><code>$ echo &#39;Hello, World!&#39; | ./do_memfrob
+bOFFE
+}EXFN
+$ echo &#39;Hello, World!&#39; | ./do_memfrob | ./do_memfrob
+Hello, World!
+</code></pre><p>2回適用するとちゃんと元に戻ります。</p>
+<div class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1">
+<p>ポータビリティの観点から、mysteriousでwonderfulなことを行いたい場面以外では、普通にforループを書くのがよいでしょう。&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</div>
+
+
+  <hr>
+  
+<section class="sns_parent">
+  <div class="sns_section">
+    <div class="sns_button twitter">
+      <a href="https://twitter.com/intent/tweet?url=https%3a%2f%2falgon-320.github.io%2fposts%2fmemfrob%2f&text=glibc%e3%81%aememfrob%e9%96%a2%e6%95%b0%20%7c%20Reinventing%20Square%20Wheels%20-%20algon%27s%20blog" target="_blank" title="Tweet"><span class="fab fa-twitter"></span></a>
+    </div>
+    <div class="sns_button pocket">
+      <a href="https://getpocket.com/edit?url=https%3a%2f%2falgon-320.github.io%2fposts%2fmemfrob%2f&title=glibc%e3%81%aememfrob%e9%96%a2%e6%95%b0%20%7c%20Reinventing%20Square%20Wheels%20-%20algon%27s%20blog" target="_blank" title="pocket"><span class="fab fa-get-pocket"></span></a>
+    </div>
+    <div class="sns_button hatena">
+      <a href="https://b.hatena.ne.jp/add?mode=confirm&url=https%3a%2f%2falgon-320.github.io%2fposts%2fmemfrob%2f&title=glibc%e3%81%aememfrob%e9%96%a2%e6%95%b0%20%7c%20Reinventing%20Square%20Wheels%20-%20algon%27s%20blog" target="_blank" title="hatena"><span class="fa fa-hatena"></span></a>
+    </div>
+    <div class="sns_button facebook">
+      <a href="https://www.facebook.com/sharer.php?u=https%3a%2f%2falgon-320.github.io%2fposts%2fmemfrob%2f&t=glibc%e3%81%aememfrob%e9%96%a2%e6%95%b0%20%7c%20Reinventing%20Square%20Wheels%20-%20algon%27s%20blog" target="_blank" title="Facebook"><span class="fab fa-facebook"></span></a>
+    </div>
+  </div>
+</section>
+
+</article>
+
+
+
+</body>
+</html>

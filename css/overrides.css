@@ -33,3 +33,65 @@ body > footer {
   color: #ffffff;
   border-bottom: 1px solid rgba(60, 62, 73, 0.6);
 }
+
+.sns_section {
+  display: inline-block;
+  text-align: left;
+}
+
+.sns_button {
+  float: left;
+  box-shadow: inset 0 0 0 2px #42464c;
+  border-radius: 100%;
+  -moz-transition: all 300ms ease;
+  -o-transition: all 300ms ease;
+  -webkit-transition: all 300ms ease;
+  transition: all 300ms ease;
+}
+
+.sns_button a {
+  display: table-cell;
+  width: 44px;
+  height: 44px;
+  color: #42464c;
+  text-align: center;
+  vertical-align: middle;
+  -moz-transition: all 300ms ease;
+  -o-transition: all 300ms ease;
+  -webkit-transition: all 300ms ease;
+  transition: all 300ms ease;
+}
+
+.sns_button:hover {
+  box-shadow: inset 0 0 0 22px #eaeaea;
+}
+
+.sns_button + .sns_button {
+  margin: 0 0 0 12px;
+}
+
+.twitter:hover a {
+  color: #1B95E0;
+}
+
+.facebook:hover a {
+  color: #3B5999;
+}
+
+.instagram:hover a {
+  color: #2b5c84;
+}
+
+.pocket:hover a {
+  color: #EE4056;
+}
+
+.hatena:hover a {
+  color: #4BA3D9;
+}
+
+.fa-hatena:before {
+    content: "B!";
+    font-family: Verdana, Arial, sans-serif;
+    font-weight: bold
+}
